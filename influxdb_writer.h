@@ -4,60 +4,67 @@
 #include "esphome/core/controller.h"
 #include "esphome/core/defines.h"
 #include "esphome/core/log.h"
-#include <WiFiUdp.h>
-#include <string>
 #include <vector>
+
+#include "esphome/components/http_request/http_request.h"
 
 namespace esphome {
 namespace influxdb {
 
 class InfluxDBWriter : public Component {
 public:
-  InfluxDBWriter() : packet_size(0){};
+  InfluxDBWriter(){};
   void setup() override;
   void loop() override;
   void dump_config() override;
 #ifdef USE_BINARY_SENSOR
   void on_sensor_update(binary_sensor::BinarySensor *obj,
-                        std::string measurement, std::string tags, bool state);
+                        std::string measurement, std::string tags,
+                        std::string retention, bool state);
 #endif
 #ifdef USE_SENSOR
   void on_sensor_update(sensor::Sensor *obj, std::string measurement,
-                        std::string tags, float state);
+                        std::string tags, std::string retention, float state);
 #endif
 #ifdef USE_TEXT_SENSOR
   void on_sensor_update(text_sensor::TextSensor *obj, std::string measurement,
-                        std::string tags, std::string state);
+                        std::string tags, std::string retention,
+                        std::string state);
 #endif
 
   void set_host(std::string host) { this->host = host; };
   void set_port(uint16_t port) { this->port = port; };
+
+  void set_username(std::string username) { this->username = username; };
+  void set_password(std::string password) { this->password = password; };
+  void set_database(std::string database) { this->database = database; };
   void set_send_timeout(int timeout) { send_timeout = timeout; };
-  void set_max_packet_size(int size) { max_packet_size = size; };
+
   void set_tags(std::string tags) { this->tags = tags; };
   void set_publish_all(bool all) { publish_all = all; };
-  // void add_setup_callback(std::function<Nameable*()> fun) {
-  // setup_callbacks.push_back(fun); };
   void add_setup_callback(std::function<EntityBase *()> fun) {
     setup_callbacks.push_back(fun);
   };
 
 protected:
   void write(std::string measurement, std::string tags, const std::string value,
-             bool is_string);
+             std::string retention, bool is_string);
 
   uint16_t port;
   std::string host;
-  int max_packet_size;
+
+  std::string username;
+  std::string password;
+  std::string database;
+  std::string service_url;
+
   int send_timeout;
   std::string tags;
   bool publish_all;
 
   std::vector<std::function<EntityBase *()>> setup_callbacks;
 
-  WiFiUDP udp;
-  int packet_size;
-  int packet_timeout;
+  http_request::HttpRequestComponent *request_;
 };
 
 } // namespace influxdb
