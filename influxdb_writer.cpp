@@ -1,99 +1,71 @@
-#include <WiFiUdp.h>
-#include <string>
-#include "esphome/core/log.h"
-#include "esphome/core/application.h"
-#include "influxdb_writer.h"
+#pragma once
 
-#ifdef USE_LOGGER
-#include "esphome/components/logger/logger.h"
-#endif
+#include "esphome/core/component.h"
+#include "esphome/core/controller.h"
+#include "esphome/core/defines.h"
+#include "esphome/core/log.h"
+#include <vector>
+
+#include "esphome/components/http_request/http_request.h"
 
 namespace esphome {
 namespace influxdb {
 
-static const char *TAG = "influxdb";
-
-void InfluxDBWriter::setup() {
-  ESP_LOGCONFIG(TAG, "Setting up InfluxDB Writer...");
-  std::vector<EntityBase*> objs;
-  for(auto fun: setup_callbacks)
-     objs.push_back(fun());
-
-  if (publish_all) {
+class InfluxDBWriter : public Component {
+public:
+  InfluxDBWriter(){};
+  void setup() override;
+  void loop() override;
+  void dump_config() override;
 #ifdef USE_BINARY_SENSOR
-    for (auto *obj : App.get_binary_sensors()) {
-      if (!obj->is_internal() && std::none_of(objs.begin(), objs.end(), [&obj](EntityBase *o) {return o == obj;}))
-        obj->add_on_state_callback([this, obj](bool state) { this->on_sensor_update(obj, obj->get_object_id(), tags, state); });
-    }
+  void on_sensor_update(binary_sensor::BinarySensor *obj,
+                        std::string measurement, std::string tags,
+                        std::string retention, bool state);
 #endif
 #ifdef USE_SENSOR
-    for (auto *obj : App.get_sensors()) {
-      if (!obj->is_internal() && std::none_of(objs.begin(),  objs.end(), [&obj](EntityBase *o) {return o == obj;}))
-        obj->add_on_state_callback([this, obj](float state) { this->on_sensor_update(obj, obj->get_object_id(), tags, state); });
-    }
+  void on_sensor_update(sensor::Sensor *obj, std::string measurement,
+                        std::string tags, std::string retention, float state);
 #endif
 #ifdef USE_TEXT_SENSOR
-    for (auto *obj : App.get_text_sensors()) {
-      if (!obj->is_internal() && std::none_of(objs.begin(),  objs.end(), [&obj](EntityBase *o) {return o == obj;}))
-        obj->add_on_state_callback([this, obj](std::string state) { this->on_sensor_update(obj, obj->get_object_id(), tags, state); });
-    }
-#endif
-  }
-}
-
-void InfluxDBWriter::loop() {
-  if (packet_size > 0 && millis() >= packet_timeout) {
-    udp.endPacket();
-    packet_size = 0;
-  }
-}
-
-void InfluxDBWriter::write(std::string measurement, std::string tags, const std::string value, bool is_string) 
-{
-  std::string line = measurement + tags + " value=" + (is_string ? ("\"" + value + "\"") : value);
-
-  if (line.size() > max_packet_size) {
-    ESP_LOGW(TAG, "Line too large to fit in UDP packet: %s", line.c_str());
-    return;
-  }
-  
-  if (packet_size + line.size() + 1 > max_packet_size) {
-    udp.endPacket();
-    packet_size = 0;
-  }
-
-  if (packet_size == 0) {
-    packet_timeout = millis() + send_timeout;
-    udp.beginPacket(host.c_str(), port);
-  } else
-    udp.write('\n');
-
-  udp.write(line.data(), line.size());
-  packet_size += line.size();
-}
-
-void InfluxDBWriter::dump_config() {
-  ESP_LOGCONFIG(TAG, "InfluxDB Writer:");
-  ESP_LOGCONFIG(TAG, "  Address: %s:%u", host.c_str(), port);
-}
-
-#ifdef USE_BINARY_SENSOR
-void InfluxDBWriter::on_sensor_update(binary_sensor::BinarySensor *obj, std::string measurement, std::string tags, bool state) {
-  write(measurement, tags, state ? "t" : "f", false);
-}
+  void on_sensor_update(text_sensor::TextSensor *obj, std::string measurement,
+                        std::string tags, std::string retention,
+                        std::string state);
 #endif
 
-#ifdef USE_SENSOR
-void InfluxDBWriter::on_sensor_update(sensor::Sensor *obj, std::string measurement, std::string tags, float state) {
-  write(measurement, tags, to_string(state), false);
-}
-#endif
+  void set_host(std::string host) { this->host = host; };
+  void set_port(uint16_t port) { this->port = port; };
 
-#ifdef USE_TEXT_SENSOR
-void InfluxDBWriter::on_sensor_update(text_sensor::TextSensor *obj, std::string measurement, std::string tags, std::string state) {
-  write(measurement, tags, state, true);
-}
-#endif
+  void set_username(std::string username) { this->username = username; };
+  void set_password(std::string password) { this->password = password; };
+  void set_database(std::string database) { this->database = database; };
+  void set_send_timeout(int timeout) { send_timeout = timeout; };
 
-}  // namespace api
-}  // namespace esphome
+  void set_tags(std::string tags) { this->tags = tags; };
+  void set_publish_all(bool all) { publish_all = all; };
+  void add_setup_callback(std::function<EntityBase *()> fun) {
+    setup_callbacks.push_back(fun);
+  };
+
+protected:
+  void write(std::string measurement, std::string tags, const std::string value,
+             std::string retention, bool is_string);
+
+  uint16_t port;
+  std::string host;
+
+  std::string username;
+  std::string password;
+  std::string database;
+  std::string service_url;
+
+  int send_timeout;
+  std::string tags;
+  bool publish_all;
+
+  std::vector<std::function<EntityBase *()>> setup_callbacks;
+
+  http_request::HttpRequestComponent *request_;
+};
+
+} // namespace influxdb
+} // namespace esphome
