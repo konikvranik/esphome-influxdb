@@ -1,71 +1,135 @@
-#pragma once
-
-#include "esphome/core/component.h"
-#include "esphome/core/controller.h"
-#include "esphome/core/defines.h"
+#include "influxdb_writer.h"
+#include "esphome/core/application.h"
 #include "esphome/core/log.h"
-#include <vector>
+#include <algorithm>
+#include <string>
 
-#include "esphome/components/http_request/http_request.h"
+#ifdef USE_LOGGER
+#include "esphome/components/logger/logger.h"
+#endif
 
 namespace esphome {
 namespace influxdb {
+static const char *TAG = "influxdb_jab";
 
-class InfluxDBWriter : public Component {
-public:
-  InfluxDBWriter(){};
-  void setup() override;
-  void loop() override;
-  void dump_config() override;
+void InfluxDBWriter::setup() {
+  ESP_LOGCONFIG(TAG, "Setting up InfluxDB Writer...");
+  std::vector<EntityBase *> objs;
+  for (auto fun : setup_callbacks)
+    objs.push_back(fun());
+
+  this->service_url = "http://" + this->host + ":" + to_string(this->port) +
+                      "/write?db=" + this->database;
+
+  this->request_ = new http_request::HttpRequestComponent();
+  this->request_->setup();
+
+  std::list<http_request::Header> headers;
+  http_request::Header header;
+  header.name = "Content-Type";
+  header.value = "text/plain";
+  headers.push_back(header);
+  if ((this->username.length() > 0) && (this->password.length() > 0)) {
+    header.name = "u";
+    header.value = this->username.c_str();
+    headers.push_back(header);
+    header.name = "p";
+    header.value = this->password.c_str();
+    headers.push_back(header);
+  }
+  this->request_->set_headers(headers);
+  this->request_->set_method("GET");
+  this->request_->set_useragent("ESPHome InfluxDB Bot");
+  this->request_->set_timeout(this->send_timeout);
+
+  // From now own all request are POST.
+  this->request_->set_method("POST");
+
+  if (publish_all) {
 #ifdef USE_BINARY_SENSOR
-  void on_sensor_update(binary_sensor::BinarySensor *obj,
-                        std::string measurement, std::string tags,
-                        std::string retention, bool state);
+    for (auto *obj : App.get_binary_sensors()) {
+      if (!obj->is_internal() &&
+          std::none_of(objs.begin(), objs.end(),
+                       [&obj](EntityBase *o) { return o == obj; }))
+        obj->add_on_state_callback([this, obj](bool state) {
+          this->on_sensor_update(obj, obj->get_object_id(), tags, "", state);
+        });
+    }
 #endif
 #ifdef USE_SENSOR
-  void on_sensor_update(sensor::Sensor *obj, std::string measurement,
-                        std::string tags, std::string retention, float state);
+    for (auto *obj : App.get_sensors()) {
+      if (!obj->is_internal() &&
+          std::none_of(objs.begin(), objs.end(),
+                       [&obj](EntityBase *o) { return o == obj; }))
+        obj->add_on_state_callback([this, obj](float state) {
+          this->on_sensor_update(obj, obj->get_object_id(), tags, "", state);
+        });
+    }
 #endif
 #ifdef USE_TEXT_SENSOR
-  void on_sensor_update(text_sensor::TextSensor *obj, std::string measurement,
-                        std::string tags, std::string retention,
-                        std::string state);
+    for (auto *obj : App.get_text_sensors()) {
+      if (!obj->is_internal() &&
+          std::none_of(objs.begin(), objs.end(),
+                       [&obj](EntityBase *o) { return o == obj; }))
+        obj->add_on_state_callback([this, obj](std::string state) {
+          this->on_sensor_update(obj, obj->get_object_id(), tags, "", state);
+        });
+    }
+#endif
+  }
+}
+
+void InfluxDBWriter::loop() {}
+
+void InfluxDBWriter::write(std::string measurement,
+                           /* unused */ std::string tags,
+                           const std::string value, std::string retention,
+                           bool is_string) {
+  std::replace(measurement.begin(), measurement.end(), '-', '_');
+  std::string line =
+      measurement + " value=" + (is_string ? ("\"" + value + "\"") : value);
+  this->request_->set_url(
+      this->service_url +
+      (retention.empty() ? "" : "&rp=" + retention + "&precision=s"));
+  this->request_->set_body(line.c_str());
+  this->request_->send({});
+
+  this->request_->close();
+
+  ESP_LOGD(TAG, "InfluxDB packet: %s", line.c_str());
+}
+
+void InfluxDBWriter::dump_config() {
+  ESP_LOGCONFIG(TAG, "InfluxDB Writer:");
+  ESP_LOGCONFIG(TAG, "  Address: %s:%u", host.c_str(), port);
+  ESP_LOGCONFIG(TAG, "  Database: %s", database.c_str());
+}
+
+#ifdef USE_BINARY_SENSOR
+void InfluxDBWriter::on_sensor_update(binary_sensor::BinarySensor *obj,
+                                      std::string measurement, std::string tags,
+                                      std::string retention, bool state) {
+  write(measurement, tags, state ? "t" : "f", retention, false);
+}
 #endif
 
-  void set_host(std::string host) { this->host = host; };
-  void set_port(uint16_t port) { this->port = port; };
+#ifdef USE_SENSOR
+void InfluxDBWriter::on_sensor_update(sensor::Sensor *obj,
+                                      std::string measurement, std::string tags,
+                                      std::string retention, float state) {
+  if (!isnan(state))
+    write(measurement, tags, to_string(state), retention, false);
+}
+#endif
 
-  void set_username(std::string username) { this->username = username; };
-  void set_password(std::string password) { this->password = password; };
-  void set_database(std::string database) { this->database = database; };
-  void set_send_timeout(int timeout) { send_timeout = timeout; };
-
-  void set_tags(std::string tags) { this->tags = tags; };
-  void set_publish_all(bool all) { publish_all = all; };
-  void add_setup_callback(std::function<EntityBase *()> fun) {
-    setup_callbacks.push_back(fun);
-  };
-
-protected:
-  void write(std::string measurement, std::string tags, const std::string value,
-             std::string retention, bool is_string);
-
-  uint16_t port;
-  std::string host;
-
-  std::string username;
-  std::string password;
-  std::string database;
-  std::string service_url;
-
-  int send_timeout;
-  std::string tags;
-  bool publish_all;
-
-  std::vector<std::function<EntityBase *()>> setup_callbacks;
-
-  http_request::HttpRequestComponent *request_;
-};
+#ifdef USE_TEXT_SENSOR
+void InfluxDBWriter::on_sensor_update(text_sensor::TextSensor *obj,
+                                      std::string measurement, std::string tags,
+                                      std::string retention,
+                                      std::string state) {
+  write(measurement, tags, state, retention, true);
+}
+#endif
 
 } // namespace influxdb
 } // namespace esphome

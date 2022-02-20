@@ -53,7 +53,6 @@ protected:
   std::string tags;
   bool publish_all;
 
-  // std::vector<std::function<Nameable*()>> setup_callbacks;
   std::vector<std::function<EntityBase *()>> setup_callbacks;
 
   WiFiUDP udp;
