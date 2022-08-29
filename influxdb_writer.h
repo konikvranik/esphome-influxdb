@@ -35,9 +35,9 @@ public:
   void set_host(std::string host) { this->host = host; };
   void set_port(uint16_t port) { this->port = port; };
 
-  void set_username(std::string username) { this->username = username; };
-  void set_password(std::string password) { this->password = password; };
-  void set_database(std::string database) { this->database = database; };
+  void set_orgid(std::string orgid) { this->orgid = orgid; };
+  void set_token(std::string token) { this->token = token; };
+  void set_bucket(std::string bucket) { this->bucket = bucket; };
   void set_send_timeout(int timeout) { send_timeout = timeout; };
 
   void set_tags(std::string tags) { this->tags = tags; };
@@ -53,9 +53,9 @@ protected:
   uint16_t port;
   std::string host;
 
-  std::string username;
-  std::string password;
-  std::string database;
+  std::string orgid;
+  std::string token;
+  std::string bucket;
   std::string service_url;
 
   int send_timeout;
