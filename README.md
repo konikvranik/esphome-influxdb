@@ -4,16 +4,16 @@ Changes from Jepsson/esphome-influxdb:
 
 ## Installation
 Add this repository as an submodule in your esphome custom_compontents;
-`git clone https://github.com/CalvinSchwartz/esphome-influxdb custom_components/influxdb`
+`git clone https://github.com/CalvinSchwartz/esphome-influxdb custom_components/influxdb2`
 
 ## Usage
 
-Add `influxdb` section to your ESPHome configuration file.
+Add `influxdb2` section to your ESPHome configuration file.
 
 ### Example configuration
 
 ```yaml
-influxdb:
+influxdb2:
   host: "influxdb-host"
   sensors:
     meter_id:
