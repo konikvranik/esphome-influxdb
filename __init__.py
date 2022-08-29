@@ -12,9 +12,9 @@ InfluxDBWriter = influxdb_ns.class_(
     'InfluxDBWriter', cg.Component, cg.Controller)
 
 CONF_HOST = 'host'
-CONF_USERNAME = 'username'
-CONF_PASSWORD = 'password'
-CONF_DATABASE = 'database'
+CONF_ORG_ID = 'orgid'
+CONF_TOKEN = 'token'
+CONF_BUCKET = 'bucket'
 CONF_RETENTION = 'retention'
 CONF_SEND_TIMEOUT = 'send_timeout'
 CONF_TAGS = 'tags'
@@ -40,9 +40,9 @@ CONFIG_SCHEMA = cv.Schema({
     cv.GenerateID(): cv.declare_id(InfluxDBWriter),
     cv.Required(CONF_HOST): cv.domain,
     cv.Optional(CONF_PORT, default=8086): cv.port,
-    cv.Optional(CONF_USERNAME, default=''): cv.string_strict,
-    cv.Optional(CONF_PASSWORD, default=''): cv.string_strict,
-    cv.Optional(CONF_DATABASE, default='esphome'): cv.string_strict,
+    cv.Required(CONF_ORG_ID): cv.string_strict,
+    cv.Required(CONF_TOKEN): cv.string_strict,
+    cv.Required(CONF_BUCKET): cv.string_strict,
     cv.Optional(CONF_SEND_TIMEOUT, default='500ms'): cv.positive_time_period_milliseconds,
     cv.Optional(CONF_PUBLISH_ALL, default=True): cv.boolean,
     cv.Optional(CONF_TAGS, default={'node': CORE.name}): cv.Schema({
@@ -59,9 +59,9 @@ def to_code(config):
 
     cg.add(var.set_host(config[CONF_HOST]))
     cg.add(var.set_port(config[CONF_PORT]))
-    cg.add(var.set_username(config[CONF_USERNAME]))
-    cg.add(var.set_password(config[CONF_PASSWORD]))
-    cg.add(var.set_database(config[CONF_DATABASE]))
+    cg.add(var.set_orgid(config[CONF_ORG_ID]))
+    cg.add(var.set_token(config[CONF_TOKEN]))
+    cg.add(var.set_bucket(config[CONF_BUCKET]))
     cg.add(var.set_send_timeout(config[CONF_SEND_TIMEOUT]))
     cg.add(var.set_publish_all(config[CONF_PUBLISH_ALL]))
 
