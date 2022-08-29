@@ -1,8 +1,10 @@
-# InfluxDB custom component for ESPHome
+# InfluxDB2 custom component for ESPHome
+Changes from Jepsson/esphome-influxdb:
+- Changed to InfluxDB2 API
 
 ## Installation
 Add this repository as an submodule in your esphome custom_compontents;
-`git submodule add https://github.com/Jepsson/esphome-influxdb custom_components/influxdb`
+`git clone https://github.com/CalvinSchwartz/esphome-influxdb custom_components/influxdb`
 
 ## Usage
 
@@ -26,9 +28,9 @@ influxdb:
 
 * **host** (Required, string): Hostname or IP for the InfluxDB server
 * **port** (Optional, int, default: 8086): Port number the InfluxDB server is listening on.
-* **username** (Optional, string, default: ""): Username used when connecting to influxdb.
-* **password** (Optional, string, default: ""): Password used when connecting to influxdb.
-* **database** (Optional, string, default: "esphome"): Name of influxdb database.
+* **orgid** (Required, string): Organization ID when connecting to influxdb.
+* **password** (Required, string): Password used when connecting to influxdb.
+* **bucket** (Required, string): Name of influxdb bucket.
 * **send_timeout** (Optional, time, default: "500ms"): Time to wait before sending UDP packets which have not been filled to max size.
 * **publish_all** (Optional, boolean, default: True): If true, publish updates from all sensors unless explicitly ignored in per sensor configuration. If false, only publish updates from sensors explicitly configured.
 * **tags** (Optional, mapping, default 'node: <esphome.name>'): Mapping of tag keys and values. 
@@ -38,5 +40,4 @@ influxdb:
 
 * **ignore** (Optional, boolean, default: False): Whether or not to include updates for this sensor.
 * **measurement** (Optional, string): Name of measurements with update from this sensor. Defaults to the sanitized name of the sensor.
-* **retention** (Optional, string): Use a retention policy
 * **tags** (Optional, mapping, default: {}): Additional tags added for this sensor.
