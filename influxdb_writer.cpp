@@ -19,7 +19,7 @@ void InfluxDBWriter::setup() {
     objs.push_back(fun());
 
   this->service_url = "http://" + this->host + ":" + to_string(this->port) +
-                      "/write?db=" + this->database;
+                      "/api/v2/write?org=" + this.orgid + "&bucket=" + this.bucket + "&precision=ns";
 
   this->request_ = new http_request::HttpRequestComponent();
   this->request_->setup();
@@ -29,12 +29,9 @@ void InfluxDBWriter::setup() {
   header.name = "Content-Type";
   header.value = "text/plain";
   headers.push_back(header);
-  if ((this->username.length() > 0) && (this->password.length() > 0)) {
-    header.name = "u";
-    header.value = this->username.c_str();
-    headers.push_back(header);
-    header.name = "p";
-    header.value = this->password.c_str();
+  if ((this->orgid.length() > 0) && (this->token.length() > 0)) {
+    header.name = "Authorization";
+    header.value = "Token " + this.token;
     headers.push_back(header);
   }
   this->request_->set_headers(headers);
@@ -102,7 +99,7 @@ void InfluxDBWriter::write(std::string measurement,
 void InfluxDBWriter::dump_config() {
   ESP_LOGCONFIG(TAG, "InfluxDB Writer:");
   ESP_LOGCONFIG(TAG, "  Address: %s:%u", host.c_str(), port);
-  ESP_LOGCONFIG(TAG, "  Database: %s", database.c_str());
+  ESP_LOGCONFIG(TAG, "  Bucket: %s", bucket.c_str());
 }
 
 #ifdef USE_BINARY_SENSOR
