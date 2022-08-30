@@ -58,6 +58,7 @@ protected:
   std::string token;
   std::string bucket;
   std::string service_url;
+  std::string device;
 
   int send_timeout;
   std::string tags;
