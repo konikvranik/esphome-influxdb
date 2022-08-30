@@ -18,6 +18,7 @@ CONF_BUCKET = 'bucket'
 CONF_RETENTION = 'retention'
 CONF_SEND_TIMEOUT = 'send_timeout'
 CONF_TAGS = 'tags'
+CONF_DEVICE = 'device'
 CONF_PUBLISH_ALL = 'publish_all'
 CONF_SENSORS = 'sensors'
 CONF_IGNORE = 'ignore'
@@ -41,6 +42,7 @@ CONFIG_SCHEMA = cv.Schema({
     cv.Required(CONF_HOST): cv.domain,
     cv.Optional(CONF_PORT, default=8086): cv.port,
     cv.Required(CONF_ORG_ID): cv.string_strict,
+    cv.Required(CONF_DEVICE): cv.string_strict,
     cv.Required(CONF_TOKEN): cv.string_strict,
     cv.Required(CONF_BUCKET): cv.string_strict,
     cv.Optional(CONF_SEND_TIMEOUT, default='500ms'): cv.positive_time_period_milliseconds,
@@ -64,6 +66,7 @@ def to_code(config):
     cg.add(var.set_bucket(config[CONF_BUCKET]))
     cg.add(var.set_send_timeout(config[CONF_SEND_TIMEOUT]))
     cg.add(var.set_publish_all(config[CONF_PUBLISH_ALL]))
+    cg.add(var.set_device(config[CONF_DEVICE]))
 
     cg.add(var.set_tags(''.join(',{}={}'.format(tag, value)
            for tag, value in config[CONF_TAGS].items())))
