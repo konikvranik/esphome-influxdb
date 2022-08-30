@@ -31,7 +31,7 @@ void InfluxDBWriter::setup() {
   headers.push_back(header);
   if ((this->orgid.length() > 0) && (this->token.length() > 0)) {
     header.name = "Authorization";
-    header.value = "Token " + this->token;
+    header.value = this->token.c_str();
     headers.push_back(header);
   }
   this->request_->set_headers(headers);
@@ -84,7 +84,7 @@ void InfluxDBWriter::write(std::string measurement,
                            bool is_string) {
   std::replace(measurement.begin(), measurement.end(), '-', '_');
   std::string line =
-      measurement + "device=" + this->device + " value=" + (is_string ? ("\"" + value + "\"") : value);
+      measurement + " device=" + this->device + " value=" + (is_string ? ("\"" + value + "\"") : value);
   this->request_->set_url(
       this->service_url +
       (retention.empty() ? "" : "&rp=" + retention + "&precision=s"));

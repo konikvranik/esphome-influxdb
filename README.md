@@ -16,7 +16,7 @@ Add `influxdb2` section to your ESPHome configuration file.
 influxdb2:
   host: "influxdb-host"
   orgid: "influx_org"
-  token: "token"
+  token: "Token XXX"
   bucket: "influx_bucket"
   sensors:
     meter_id:
@@ -32,7 +32,7 @@ influxdb2:
 * **host** (Required, string): Hostname or IP for the InfluxDB server
 * **port** (Optional, int, default: 8086): Port number the InfluxDB server is listening on.
 * **orgid** (Required, string): Organization ID when connecting to influxdb.
-* **token** (Required, string): Token used when connecting to influxdb.
+* **token** (Required, string): Token used when connecting to influxdb. Format: "Token XXXX"
 * **bucket** (Required, string): Name of influxdb bucket.
 * **send_timeout** (Optional, time, default: "500ms"): Time to wait before sending UDP packets which have not been filled to max size.
 * **publish_all** (Optional, boolean, default: True): If true, publish updates from all sensors unless explicitly ignored in per sensor configuration. If false, only publish updates from sensors explicitly configured.
