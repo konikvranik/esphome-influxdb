@@ -46,7 +46,9 @@ namespace esphome
 
             //Let's create the database
             this->request_->set_url("http://"+this->host+":"+to_string(this->port)+"/query?q=CREATE+DATABASE+"+this->database);
-            this->request_->send();
+            this->request_->send(
+                std::vector<
+                    esphome::http_request::HttpRequestResponseTrigger *>{});
             this->request_->close();
 
             // From now own all request are POST.
@@ -94,7 +96,9 @@ namespace esphome
             std::string line = measurement + tags + " value=" + (is_string ? ("\"" + value + "\"") : value);
             this->request_->set_url(this->service_url);
             this->request_->set_body(line.c_str());
-            this->request_->send();
+            this->request_->send(
+                std::vector<
+                    esphome::http_request::HttpRequestResponseTrigger *>{});
 
             // String response = this->request_->get_string();
             // if (response.length() == 0) {

@@ -35,6 +35,7 @@ namespace esphome
 #ifdef USE_TEXT_SENSOR
       void on_sensor_update(text_sensor::TextSensor *obj, std::string measurement, std::string tags, std::string state);
 #endif
+      float get_setup_priority() const;
 
       void set_host(std::string host) { this->host = host; };
       void set_port(uint16_t port) { this->port = port; };
