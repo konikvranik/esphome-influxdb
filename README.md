@@ -11,7 +11,7 @@ Clone this repository into `custom_components/influxdb` from the directory
 where your ESPHome configuration is stored.
 
 ```bash
-git clone https://github.com/jabastien/esphome-influxdb custom_components/influxdb
+git clone https://github.com/konikvranik/esphome-influxdb custom_components/influxdb
 ```
 
 ## Usage
