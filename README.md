@@ -1,6 +1,7 @@
 # InfluxDB2 custom component for ESPHome
 Changes from Jepsson/esphome-influxdb:
 - Changed to InfluxDB2 API
+- Made usable as external component
 
 ## Installation
 Add this repository as an submodule in your esphome custom_compontents;
@@ -13,6 +14,10 @@ Add `influxdb2` section to your ESPHome configuration file.
 ### Example configuration
 
 ```yaml
+external_components:
+  - source: github://CalvinSchwartz/esphome-influxdb
+    components: [ influxdb2 ]
+
 influxdb2:
   host: "influxdb-host"
   orgid: "influx_org"
