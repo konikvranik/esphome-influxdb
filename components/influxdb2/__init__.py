@@ -48,7 +48,7 @@ CONFIG_SCHEMA = cv.Schema({
     cv.Optional(CONF_SEND_TIMEOUT, default='500ms'): cv.positive_time_period_milliseconds,
     cv.Optional(CONF_PUBLISH_ALL, default=True): cv.boolean,
     cv.Optional(CONF_TAGS, default={'node': CORE.name}): cv.Schema({
-        cv.valid_name: cv.valid_name
+        cv.string: cv.string
     }),
     cv.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
 }).extend(cv.COMPONENT_SCHEMA)
