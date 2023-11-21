@@ -79,12 +79,12 @@ void InfluxDBWriter::setup() {
 void InfluxDBWriter::loop() {}
 
 void InfluxDBWriter::write(std::string measurement,
-                           /* unused */ std::string tags,
+                           std::string tags,
                            const std::string value, std::string retention,
                            bool is_string) {
   std::replace(measurement.begin(), measurement.end(), '-', '_');
   std::string line =
-      measurement + ",device=" + this->device + " value=" + (is_string ? ("\"" + value + "\"") : value);
+      measurement + ",", this->tags + ",device=" + this->device + " value=" + (is_string ? ("\"" + value + "\"") : value);
   this->request_->set_url(
       this->service_url +
       (retention.empty() ? "" : "&rp=" + retention + "&precision=s"));
