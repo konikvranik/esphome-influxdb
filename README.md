@@ -2,6 +2,7 @@
 Changes from Jepsson/esphome-influxdb:
 - Changed to InfluxDB2 API
 - Made usable as external component
+- Make tags functional.
 
 ## Installation
 Add this repository as an submodule in your esphome custom_compontents;
@@ -23,6 +24,8 @@ influxdb2:
   orgid: "influx_org"
   token: "Token XXX"
   bucket: "influx_bucket"
+  tags:
+    sensortype: MySensor
   sensors:
     meter_id:
       ignore: True
