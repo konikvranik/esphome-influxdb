@@ -3,6 +3,8 @@
 #include "esphome/core/log.h"
 #include <algorithm>
 #include <string>
+#include <iomanip>
+#include <sstream>
 
 #ifdef USE_LOGGER
 #include "esphome/components/logger/logger.h"
@@ -42,6 +44,7 @@ void InfluxDBWriter::setup() {
   this->request_->set_method("GET");
   this->request_->set_useragent("ESPHome InfluxDB Bot");
   this->request_->set_timeout(this->send_timeout);
+  this->request_->set_url(this->service_url);
 
   // From now own all request are POST.
   this->request_->set_method("POST");
@@ -89,6 +92,7 @@ void InfluxDBWriter::write(std::string measurement,
   std::replace(measurement.begin(), measurement.end(), '-', '_');
   std::string line =
       measurement + this->tags + " value=" + (is_string ? ("\"" + value + "\"") : value);
+  
   this->request_->set_body(line.c_str());
   this->request_->send({});
 
@@ -113,8 +117,11 @@ void InfluxDBWriter::on_sensor_update(binary_sensor::BinarySensor *obj,
 #ifdef USE_SENSOR
 void InfluxDBWriter::on_sensor_update(sensor::Sensor *obj,
                                       std::string measurement, std::string tags, float state) {
-  if (!isnan(state))
-    write(measurement, tags, to_string(state), false);
+  if (!isnan(state)){
+    std::stringstream  stream;
+    stream << std::fixed << std::setprecision(this->precision) << state;
+    write(measurement, tags, stream.str(), false);
+  }
 }
 #endif
 

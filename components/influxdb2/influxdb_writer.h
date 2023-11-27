@@ -45,6 +45,7 @@ public:
     setup_callbacks.push_back(fun);
   };
   void set_https(bool https) {this->https = https; };
+  void set_precision(int precision) {this->precision = precision; };
 
 protected:
   void write(std::string measurement, std::string tags, const std::string value, bool is_string);
@@ -62,6 +63,7 @@ protected:
   std::string tags;
   bool publish_all;
   bool https;
+  int precision;
 
   std::vector<std::function<EntityBase *()>> setup_callbacks;
 

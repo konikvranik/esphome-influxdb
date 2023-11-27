@@ -23,6 +23,7 @@ CONF_SENSORS = 'sensors'
 CONF_IGNORE = 'ignore'
 CONF_MEASUREMENT = 'measurement'
 CONF_HTTPS = 'https'
+CONF_PRECISION = 'precision'
 
 
 SENSOR_SCHEMA = cv.Schema({
@@ -51,6 +52,7 @@ CONFIG_SCHEMA = cv.Schema({
     }),
     cv.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
     cv.Optional(CONF_HTTPS, default=False): cv.boolean,
+    cv.Optional(CONF_PRECISION, default=8): cv.int,
 }).extend(cv.COMPONENT_SCHEMA)
 
 
@@ -68,6 +70,7 @@ def to_code(config):
     cg.add(var.set_publish_all(config[CONF_PUBLISH_ALL]))
 #    cg.add(var.set_device('device=' + config[CONF_DEVICE]))
     cg.add(var.set_https(config[CONF_HTTPS]))
+    cg.add(var.set_precision(config[CONF_PRECISION]))
 
     cg.add(var.set_tags(''.join(',{}={}'.format(tag, value)
            for tag, value in config[CONF_TAGS].items()).replace(" ", "\ ")))
