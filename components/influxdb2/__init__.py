@@ -52,7 +52,7 @@ CONFIG_SCHEMA = cv.Schema({
     }),
     cv.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
     cv.Optional(CONF_HTTPS, default=False): cv.boolean,
-    cv.Optional(CONF_PRECISION, default=8): cv.int,
+    cv.Optional(CONF_PRECISION, default=8): cv.int_,
 }).extend(cv.COMPONENT_SCHEMA)
 
 
