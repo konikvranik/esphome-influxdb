@@ -39,7 +39,7 @@ public:
   void set_token(std::string token) { this->token = token; };
   void set_bucket(std::string bucket) { this->bucket = bucket; };
   void set_send_timeout(int timeout) { send_timeout = timeout; };
-  void set_device(std::string device) { this->device = device; };
+//  void set_device(std::string device) { this->device = device; };
 
   void set_tags(std::string tags) { this->tags = tags; };
   void set_publish_all(bool all) { publish_all = all; };
@@ -58,7 +58,7 @@ protected:
   std::string token;
   std::string bucket;
   std::string service_url;
-  std::string device;
+//  std::string device;
 
   int send_timeout;
   std::string tags;
