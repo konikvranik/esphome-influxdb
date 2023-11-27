@@ -87,7 +87,7 @@ void InfluxDBWriter::loop() {}
 
 void InfluxDBWriter::write(std::string measurement,
                            std::string tags,
-                           const std:string field_key,
+                           const std::string field_key,
                            const std::string value,
                            const bool is_string) {
   std::replace(measurement.begin(), measurement.end(), '-', '_');
@@ -98,11 +98,10 @@ void InfluxDBWriter::write(std::string measurement,
     }
   }
   std::string line =
-      measurement + tags + " " field_key + "=" + (is_string ? ("\"" + value + "\"") : value);
-  
+      measurement + tags + " " + field_key + "=" + (is_string ? ("\"" + value + "\"") : value);
+
   this->request_->set_body(line.c_str());
   this->request_->send({});
-
   this->request_->close();
 
   ESP_LOGD(TAG, "InfluxDB packet: %s", line.c_str());
