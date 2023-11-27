@@ -19,17 +19,15 @@ public:
   void dump_config() override;
 #ifdef USE_BINARY_SENSOR
   void on_sensor_update(binary_sensor::BinarySensor *obj,
-                        std::string measurement, std::string tags,
-                        std::string retention, bool state);
+                        std::string measurement, std::string tags, bool state);
 #endif
 #ifdef USE_SENSOR
   void on_sensor_update(sensor::Sensor *obj, std::string measurement,
-                        std::string tags, std::string retention, float state);
+                        std::string tags, float state);
 #endif
 #ifdef USE_TEXT_SENSOR
   void on_sensor_update(text_sensor::TextSensor *obj, std::string measurement,
-                        std::string tags, std::string retention,
-                        std::string state);
+                        std::string tags, std::string state);
 #endif
 
   void set_host(std::string host) { this->host = host; };
@@ -49,8 +47,7 @@ public:
   void set_https(bool https) {this->https = https; };
 
 protected:
-  void write(std::string measurement, std::string tags, const std::string value,
-             std::string retention, bool is_string);
+  void write(std::string measurement, std::string tags, const std::string value, bool is_string);
 
   uint16_t port;
   std::string host;

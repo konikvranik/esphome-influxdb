@@ -84,14 +84,11 @@ void InfluxDBWriter::loop() {}
 
 void InfluxDBWriter::write(std::string measurement,
                            std::string tags,
-                           const std::string value, std::string retention,
+                           const std::string value,
                            bool is_string) {
   std::replace(measurement.begin(), measurement.end(), '-', '_');
   std::string line =
       measurement + this->tags + " value=" + (is_string ? ("\"" + value + "\"") : value);
-  this->request_->set_url(
-      this->service_url +
-      (retention.empty() ? "" : "&rp=" + retention + "&precision=s"));
   this->request_->set_body(line.c_str());
   this->request_->send({});
 
@@ -108,27 +105,24 @@ void InfluxDBWriter::dump_config() {
 
 #ifdef USE_BINARY_SENSOR
 void InfluxDBWriter::on_sensor_update(binary_sensor::BinarySensor *obj,
-                                      std::string measurement, std::string tags,
-                                      std::string retention, bool state) {
-  write(measurement, tags, state ? "t" : "f", retention, false);
+                                      std::string measurement, std::string tags, bool state) {
+  write(measurement, tags, state ? "t" : "f", false);
 }
 #endif
 
 #ifdef USE_SENSOR
 void InfluxDBWriter::on_sensor_update(sensor::Sensor *obj,
-                                      std::string measurement, std::string tags,
-                                      std::string retention, float state) {
+                                      std::string measurement, std::string tags, float state) {
   if (!isnan(state))
-    write(measurement, tags, to_string(state), retention, false);
+    write(measurement, tags, to_string(state), false);
 }
 #endif
 
 #ifdef USE_TEXT_SENSOR
 void InfluxDBWriter::on_sensor_update(text_sensor::TextSensor *obj,
                                       std::string measurement, std::string tags,
-                                      std::string retention,
                                       std::string state) {
-  write(measurement, tags, state, retention, true);
+  write(measurement, tags, state, true);
 }
 #endif
 

@@ -15,7 +15,6 @@ CONF_HOST = 'host'
 CONF_ORG_ID = 'orgid'
 CONF_TOKEN = 'token'
 CONF_BUCKET = 'bucket'
-CONF_RETENTION = 'retention'
 CONF_SEND_TIMEOUT = 'send_timeout'
 CONF_TAGS = 'tags'
 # CONF_DEVICE = 'device'
@@ -31,7 +30,6 @@ SENSOR_SCHEMA = cv.Schema({
     cv.Schema({
         cv.Optional(CONF_IGNORE, default=False): cv.boolean,
         cv.Optional(CONF_MEASUREMENT): cv.string,
-        cv.Optional(CONF_RETENTION): cv.string,
         cv.Optional(CONF_TAGS, default={}): cv.Schema({
             cv.string: cv.string
         }),
@@ -83,12 +81,8 @@ def to_code(config):
             else:
                 measurement = f"{sensor_id}->get_object_id()"
 
-            if 'retention' in sensor_config:
-                retention = f"\"{sensor_config[CONF_RETENTION]}\""
-            else:
-                retention = "\"\""
             cg.add(var.add_setup_callback(cg.RawExpression(
-                f"[]() -> EntityBase* {{ {sensor_id}->add_on_state_callback([](float state) {{ {config[CONF_ID]}->on_sensor_update({sensor_id}, {measurement}, \"{tags}\", {retention}, state); }}); return {sensor_id}; }}")))
+                f"[]() -> EntityBase* {{ {sensor_id}->add_on_state_callback([](float state) {{ {config[CONF_ID]}->on_sensor_update({sensor_id}, {measurement}, \"{tags}\", state); }}); return {sensor_id}; }}")))
         else:
             cg.add(var.add_setup_callback(cg.RawExpression(
                 f"[]() -> EntityBase* {{ return {sensor_id}; }}")))
