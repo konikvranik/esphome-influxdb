@@ -53,7 +53,7 @@ void InfluxDBWriter::setup() {
           std::none_of(objs.begin(), objs.end(),
                        [&obj](EntityBase *o) { return o == obj; }))
         obj->add_on_state_callback([this, obj](bool state) {
-          this->on_sensor_update(obj, obj->get_object_id(), tags, "", state);
+          this->on_sensor_update(obj, obj->get_object_id(), tags,  state);
         });
     }
 #endif
@@ -63,7 +63,7 @@ void InfluxDBWriter::setup() {
           std::none_of(objs.begin(), objs.end(),
                        [&obj](EntityBase *o) { return o == obj; }))
         obj->add_on_state_callback([this, obj](float state) {
-          this->on_sensor_update(obj, obj->get_object_id(), tags, "", state);
+          this->on_sensor_update(obj, obj->get_object_id(), tags, state);
         });
     }
 #endif
@@ -73,7 +73,7 @@ void InfluxDBWriter::setup() {
           std::none_of(objs.begin(), objs.end(),
                        [&obj](EntityBase *o) { return o == obj; }))
         obj->add_on_state_callback([this, obj](std::string state) {
-          this->on_sensor_update(obj, obj->get_object_id(), tags, "", state);
+          this->on_sensor_update(obj, obj->get_object_id(), tags, state);
         });
     }
 #endif
