@@ -19,15 +19,15 @@ public:
   void dump_config() override;
 #ifdef USE_BINARY_SENSOR
   void on_sensor_update(binary_sensor::BinarySensor *obj,
-                        std::string measurement, std::string tags, bool state);
+                        std::string measurement, std::string tags, std::string field_key, bool state);
 #endif
 #ifdef USE_SENSOR
   void on_sensor_update(sensor::Sensor *obj, std::string measurement,
-                        std::string tags, float state);
+                        std::string tags, std::string field_key, float state);
 #endif
 #ifdef USE_TEXT_SENSOR
   void on_sensor_update(text_sensor::TextSensor *obj, std::string measurement,
-                        std::string tags, std::string state);
+                        std::string tags, std::string field_key, std::string state);
 #endif
 
   void set_host(std::string host) { this->host = host; };
@@ -37,9 +37,6 @@ public:
   void set_token(std::string token) { this->token = token; };
   void set_bucket(std::string bucket) { this->bucket = bucket; };
   void set_send_timeout(int timeout) { send_timeout = timeout; };
-//  void set_device(std::string device) { this->device = device; };
-
-  void set_tags(std::string tags) { this->tags = tags; };
   void set_publish_all(bool all) { publish_all = all; };
   void add_setup_callback(std::function<EntityBase *()> fun) {
     setup_callbacks.push_back(fun);
@@ -48,7 +45,7 @@ public:
   void set_precision(int precision) {this->precision = precision; };
 
 protected:
-  void write(std::string measurement, std::string tags, const std::string value, bool is_string);
+  void write(std::string measurement, std::string tags, std::string field_key, const std::string value, bool is_string);
 
   uint16_t port;
   std::string host;
@@ -57,7 +54,7 @@ protected:
   std::string token;
   std::string bucket;
   std::string service_url;
-//  std::string device;
+  std::string field_key;
 
   int send_timeout;
   std::string tags;

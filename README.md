@@ -3,6 +3,9 @@ Changes from Jepsson/esphome-influxdb:
 - Changed to InfluxDB2 API
 - Made usable as external component
 - Remove "device" as it can be replaced by a tag
+- Made tags by sensor usable
+- Added option to switch to https
+- field_key can be set manually
 
 ## Installation
 Add this repository as an submodule in your esphome custom_compontents;
@@ -27,7 +30,6 @@ influxdb2:
   https: false
   precision: 2
   tags: # Optional
-    sensortype: MySensor
     room: MyRoom
     device: MyDevice
   sensors:
@@ -35,6 +37,8 @@ influxdb2:
       ignore: True
     ams_temperature:
       measurement: 'temperature'
+      tags:
+        sensortype: MySensor
 ```
 
 ### Configuration variables
@@ -55,4 +59,5 @@ influxdb2:
 
 * **ignore** (Optional, boolean, default: False): Whether or not to include updates for this sensor.
 * **measurement** (Optional, string): Name of measurements with update from this sensor. Defaults to the sanitized name of the sensor.
-* **tags** CURRENTLY NOT WORKING! - (Optional, mapping, default: {}): Additional tags added for this sensor.
+* **tags** (Optional, mapping, default: {}): Additional tags added for this sensor.
+* **field_key** (Optional, string, default: value): Set field_key

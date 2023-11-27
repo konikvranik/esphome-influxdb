@@ -24,6 +24,7 @@ CONF_IGNORE = 'ignore'
 CONF_MEASUREMENT = 'measurement'
 CONF_HTTPS = 'https'
 CONF_PRECISION = 'precision'
+CONF_FIELD_KEY = 'field_key'
 
 
 SENSOR_SCHEMA = cv.Schema({
@@ -34,6 +35,7 @@ SENSOR_SCHEMA = cv.Schema({
         cv.Optional(CONF_TAGS, default={}): cv.Schema({
             cv.string: cv.string
         }),
+        cv.Optional(CONF_FIELD_KEY, default='value'): cv.string_strict,
     })
 })
 
@@ -68,24 +70,22 @@ def to_code(config):
     cg.add(var.set_bucket(config[CONF_BUCKET]))
     cg.add(var.set_send_timeout(config[CONF_SEND_TIMEOUT]))
     cg.add(var.set_publish_all(config[CONF_PUBLISH_ALL]))
-#    cg.add(var.set_device('device=' + config[CONF_DEVICE]))
     cg.add(var.set_https(config[CONF_HTTPS]))
     cg.add(var.set_precision(config[CONF_PRECISION]))
 
-    cg.add(var.set_tags(''.join(',{}={}'.format(tag, value)
-           for tag, value in config[CONF_TAGS].items()).replace(" ", "\ ")))
 
     for sensor_id, sensor_config in config[CONF_SENSORS].items():
         if sensor_config[CONF_IGNORE] == False:
             tags = ''.join(',{}={}'.format(tag, value) for tag, value in {
                            **config[CONF_TAGS], **sensor_config[CONF_TAGS]}.items())
+            field_key = {**sensor_config[CONF_FIELD_KEY]}
             if 'measurement' in sensor_config:
                 measurement = f"\"{sensor_config[CONF_MEASUREMENT]}\""
             else:
                 measurement = f"{sensor_id}->get_object_id()"
 
             cg.add(var.add_setup_callback(cg.RawExpression(
-                f"[]() -> EntityBase* {{ {sensor_id}->add_on_state_callback([](float state) {{ {config[CONF_ID]}->on_sensor_update({sensor_id}, {measurement}, \"{tags}\", state); }}); return {sensor_id}; }}")))
+                f"[]() -> EntityBase* {{ {sensor_id}->add_on_state_callback([](float state) {{ {config[CONF_ID]}->on_sensor_update({sensor_id}, {measurement}, \"{tags}\", {field_key}, state); }}); return {sensor_id}; }}")))
         else:
             cg.add(var.add_setup_callback(cg.RawExpression(
                 f"[]() -> EntityBase* {{ return {sensor_id}; }}")))

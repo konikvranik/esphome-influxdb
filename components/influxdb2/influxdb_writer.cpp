@@ -56,7 +56,7 @@ void InfluxDBWriter::setup() {
           std::none_of(objs.begin(), objs.end(),
                        [&obj](EntityBase *o) { return o == obj; }))
         obj->add_on_state_callback([this, obj](bool state) {
-          this->on_sensor_update(obj, obj->get_object_id(), tags,  state);
+          this->on_sensor_update(obj, obj->get_object_id(), tags, field_key, state);
         });
     }
 #endif
@@ -66,7 +66,7 @@ void InfluxDBWriter::setup() {
           std::none_of(objs.begin(), objs.end(),
                        [&obj](EntityBase *o) { return o == obj; }))
         obj->add_on_state_callback([this, obj](float state) {
-          this->on_sensor_update(obj, obj->get_object_id(), tags, state);
+          this->on_sensor_update(obj, obj->get_object_id(), tags, field_key, state);
         });
     }
 #endif
@@ -76,7 +76,7 @@ void InfluxDBWriter::setup() {
           std::none_of(objs.begin(), objs.end(),
                        [&obj](EntityBase *o) { return o == obj; }))
         obj->add_on_state_callback([this, obj](std::string state) {
-          this->on_sensor_update(obj, obj->get_object_id(), tags, state);
+          this->on_sensor_update(obj, obj->get_object_id(), tags, field_key, state);
         });
     }
 #endif
@@ -87,11 +87,18 @@ void InfluxDBWriter::loop() {}
 
 void InfluxDBWriter::write(std::string measurement,
                            std::string tags,
+                           const std:string field_key,
                            const std::string value,
-                           bool is_string) {
+                           const bool is_string) {
   std::replace(measurement.begin(), measurement.end(), '-', '_');
+  for (size_t i = 0; i < tags.length(); ++i){ // Add the escape char "\" to all whitespaces in the tags with an "\ "
+    if (tags[i] == ' ') {
+      tags.insert(i, "\\");
+      i++; // Skip the inserted backslash
+    }
+  }
   std::string line =
-      measurement + this->tags + " value=" + (is_string ? ("\"" + value + "\"") : value);
+      measurement + tags + " " field_key + "=" + (is_string ? ("\"" + value + "\"") : value);
   
   this->request_->set_body(line.c_str());
   this->request_->send({});
@@ -109,27 +116,27 @@ void InfluxDBWriter::dump_config() {
 
 #ifdef USE_BINARY_SENSOR
 void InfluxDBWriter::on_sensor_update(binary_sensor::BinarySensor *obj,
-                                      std::string measurement, std::string tags, bool state) {
-  write(measurement, tags, state ? "t" : "f", false);
+                                      std::string measurement, std::string tags, std::string field_key, bool state) {
+  write(measurement, tags, field_key0 state ? "t" : "f", false);
 }
 #endif
 
 #ifdef USE_SENSOR
 void InfluxDBWriter::on_sensor_update(sensor::Sensor *obj,
-                                      std::string measurement, std::string tags, float state) {
+                                      std::string measurement, std::string tags, std::string field_key, float state) {
   if (!isnan(state)){
-    std::stringstream  stream;
-    stream << std::fixed << std::setprecision(this->precision) << state;
-    write(measurement, tags, stream.str(), false);
+    std::stringstream  value;
+    value << std::fixed << std::setprecision(this->precision) << state;
+    write(measurement, tags, field_key, value.str(), false);
   }
 }
 #endif
 
 #ifdef USE_TEXT_SENSOR
 void InfluxDBWriter::on_sensor_update(text_sensor::TextSensor *obj,
-                                      std::string measurement, std::string tags,
+                                      std::string measurement, std::string tags, std::string field_key,
                                       std::string state) {
-  write(measurement, tags, state, true);
+  write(measurement, tags, field_key, state, true);
 }
 #endif
 
