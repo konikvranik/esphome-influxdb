@@ -24,6 +24,7 @@ influxdb2:
   orgid: "influx_org"
   token: "Token XXX"
   bucket: "influx_bucket"
+  https: false
   tags: # Optional
     sensortype: MySensor
     room: MyRoom
@@ -42,6 +43,7 @@ influxdb2:
 * **orgid** (Required, string): Organization ID when connecting to influxdb.
 * **token** (Required, string): Token used when connecting to influxdb. Format: "Token XXXX"
 * **bucket** (Required, string): Name of influxdb bucket.
+* **https** (Optional, bool, defauls: false): Uses https and ignores the port setting.
 * **send_timeout** (Optional, time, default: "500ms"): Time to wait before sending UDP packets which have not been filled to max size.
 * **publish_all** (Optional, boolean, default: True): If true, publish updates from all sensors unless explicitly ignored in per sensor configuration. If false, only publish updates from sensors explicitly configured.
 * **tags** (Optional, mapping, default 'node: <esphome.name>'): Mapping of tag keys and values. 

@@ -18,8 +18,12 @@ void InfluxDBWriter::setup() {
   for (auto fun : setup_callbacks)
     objs.push_back(fun());
 
-  this->service_url = "http://" + this->host + ":" + to_string(this->port) +
+  if(this->https) {
+    this->service_url = "https://" + this->host + "/api/v2/write?org=" + this->orgid + "&bucket=" + this->bucket + "&precision=ns";
+  } else {
+    this->service_url = "http://" + this->host + ":" + to_string(this->port) +
                       "/api/v2/write?org=" + this->orgid + "&bucket=" + this->bucket + "&precision=ns";
+  }
 
   this->request_ = new http_request::HttpRequestComponent();
   this->request_->setup();
@@ -84,7 +88,7 @@ void InfluxDBWriter::write(std::string measurement,
                            bool is_string) {
   std::replace(measurement.begin(), measurement.end(), '-', '_');
   std::string line =
-      measurement + this->tags + value=" + (is_string ? ("\"" + value + "\"") : value);
+      measurement + this->tags + " value=" + (is_string ? ("\"" + value + "\"") : value);
   this->request_->set_url(
       this->service_url +
       (retention.empty() ? "" : "&rp=" + retention + "&precision=s"));

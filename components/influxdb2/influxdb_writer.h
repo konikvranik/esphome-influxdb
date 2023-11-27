@@ -46,6 +46,7 @@ public:
   void add_setup_callback(std::function<EntityBase *()> fun) {
     setup_callbacks.push_back(fun);
   };
+  void set_https(bool https) {this->https = https; };
 
 protected:
   void write(std::string measurement, std::string tags, const std::string value,
@@ -63,6 +64,7 @@ protected:
   int send_timeout;
   std::string tags;
   bool publish_all;
+  bool https;
 
   std::vector<std::function<EntityBase *()>> setup_callbacks;
 

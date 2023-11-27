@@ -23,6 +23,7 @@ CONF_PUBLISH_ALL = 'publish_all'
 CONF_SENSORS = 'sensors'
 CONF_IGNORE = 'ignore'
 CONF_MEASUREMENT = 'measurement'
+CONF_HTTPS = 'https'
 
 
 SENSOR_SCHEMA = cv.Schema({
@@ -51,6 +52,7 @@ CONFIG_SCHEMA = cv.Schema({
         cv.string: cv.string
     }),
     cv.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
+    cv.Optional(CONF_HTTPS, default=False): cv.boolean,
 }).extend(cv.COMPONENT_SCHEMA)
 
 
@@ -67,9 +69,10 @@ def to_code(config):
     cg.add(var.set_send_timeout(config[CONF_SEND_TIMEOUT]))
     cg.add(var.set_publish_all(config[CONF_PUBLISH_ALL]))
 #    cg.add(var.set_device('device=' + config[CONF_DEVICE]))
+    cg.add(var.set_https(config[CONF_HTTPS]))
 
     cg.add(var.set_tags(''.join(',{}={}'.format(tag, value)
-           for tag, value in config[CONF_TAGS].items())))
+           for tag, value in config[CONF_TAGS].items()).replace(" ", "\ ")))
 
     for sensor_id, sensor_config in config[CONF_SENSORS].items():
         if sensor_config[CONF_IGNORE] == False:
