@@ -116,7 +116,7 @@ void InfluxDBWriter::dump_config() {
 #ifdef USE_BINARY_SENSOR
 void InfluxDBWriter::on_sensor_update(binary_sensor::BinarySensor *obj,
                                       std::string measurement, std::string tags, std::string field_key, bool state) {
-  write(measurement, tags, field_key0 state ? "t" : "f", false);
+  write(measurement, tags, field_key, state ? "t" : "f", false);
 }
 #endif
 
