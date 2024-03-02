@@ -20,7 +20,12 @@ namespace esphome {
           for (auto fun : setup_callbacks)
             objs.push_back(fun());
 
-            this->service_url = "http"+ ((this->https)?"s":"") +"://" + this->host + ":" + to_string(this->port) +
+            if(this->https) {
+                this->service_url = "https"
+            } else {
+                this->service_url = "http"
+            }
+            this->service_url = this->service_url + "://" + this->host + ":" + to_string(this->port) +
                               "/api/v2/write?org=" + this->orgid + "&bucket=" + this->bucket + "&precision=ns";
 
           this->request_ = new http_request::HttpRequestComponent();
