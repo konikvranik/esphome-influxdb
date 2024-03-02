@@ -7,7 +7,7 @@ from esphome.core import CORE
 DEPENDENCIES = ['network']
 AUTO_LOAD = ['http_request']
 
-influxdb_ns = cg.esphome_ns.namespace('influxdb')
+influxdb_ns = cg.esphome_ns.namespace('influxdb2')
 InfluxDBWriter = influxdb_ns.class_(
     'InfluxDBWriter', cg.Component, cg.Controller)
 

@@ -9,7 +9,7 @@
 #include "esphome/components/http_request/http_request.h"
 
 namespace esphome {
-namespace influxdb {
+namespace influxdb2 {
 
 class InfluxDBWriter : public Component {
 public:
