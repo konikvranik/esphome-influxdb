@@ -6,7 +6,7 @@
 #include "esphome/core/log.h"
 #include <vector>
 
-#include "esphome/components/http_request/http_request.h"
+#include "esphome/components/http_request/http_request_arduino.h"
 
 namespace esphome {
     namespace influxdb2 {

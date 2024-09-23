@@ -28,7 +28,7 @@ namespace esphome {
             this->service_url = this->service_url + "://" + this->host + ":" + to_string(this->port) +
                                 "/api/v2/write?org=" + this->orgid + "&bucket=" + this->bucket + "&precision=ns";
 
-            this->request_ = new http_request::HttpRequestComponent();
+            this->request_ = new http_request::HttpRequestArduino();
             this->request_->setup();
 
             this->request_->set_useragent("ESPHome InfluxDB Bot");
