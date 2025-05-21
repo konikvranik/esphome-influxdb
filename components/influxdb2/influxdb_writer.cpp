@@ -141,10 +141,10 @@ namespace esphome::influxdb2
         ESP_LOGD(TAG, "InfluxDB URL: %s", this->service_url.c_str());
         ESP_LOGD(TAG, "InfluxDB headers: %s", headers_to_string(headers).c_str());
         ESP_LOGD(TAG, "InfluxDB packet: %s", body.c_str());
-        ESP_LOGD("http_request", "Body size: %d", body.size());
-        ESP_LOGD("http_request", "Header count: %d", headers.size());
+        ESP_LOGD("http_request", "Body size: %lu", body.size());
+        ESP_LOGD("http_request", "Header count: %lu", headers.size());
 
-        const esp_task_wdt_config_t cfg = {
+        constexpr esp_task_wdt_config_t cfg = {
             .timeout_ms = 500,
             .trigger_panic = false, // Spustí panic reset v případě timeoutu
             .idle_core_mask = 0, // Ignorování nečinných úloh na všech jádrech
