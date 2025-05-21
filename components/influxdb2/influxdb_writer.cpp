@@ -177,7 +177,7 @@ namespace esphome::influxdb2
         }
         response->end();
         esp_task_wdt_delete(nullptr);
-        delete body;
+        delete &body;
     }
 
     bool sensor_precondition(std::vector<EntityBase*> objs, EntityBase* sensor)
