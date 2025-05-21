@@ -186,11 +186,10 @@ namespace esphome::influxdb2
     {
 #ifdef USE_ESP_IDF
         if (!std::isnan(state))
-        {
 #else
-            if (!isnan(state)) {
+        if (!isnan(state))
 #endif
-
+        {
             std::stringstream value;
             value << std::fixed << std::setprecision(this->precision) << state;
             write(std::move(measurement), std::move(tags), field_key, value.str(), false);
