@@ -3,6 +3,7 @@
 #include "esphome/core/component.h"
 #include "esphome/core/defines.h"
 #include "esphome/core/log.h"
+#include "esp_task_wdt.h"
 #include <utility>
 #include <vector>
 
