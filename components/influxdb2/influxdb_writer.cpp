@@ -148,34 +148,37 @@ namespace esphome::influxdb2
         if (this->request_ == nullptr)
         {
             ESP_LOGE("http_request", "Client is nullptr");
+            return;
+        }
+        std::shared_ptr<http_request::HttpContainer> response = this->request_->post(
+            this->service_url, body, headers);
+
+        if (response == nullptr)
+        {
+            ESP_LOGE(TAG, "Response is nullptr, request failed.");
+            return;
+        }
+
+        if (response->status_code == 200)
+        {
+            uint8_t buf[64]; // Alokujeme statický buffer pro data
+            std::string response_body; // Řetězec pro uložení celé odpovědi (postupně načítán)
+
+            // Načítáme ze streamu až do konce
+            int bytes_read;
+            while ((bytes_read = response->read(buf, sizeof(buf))) > 0)
+            {
+                response_body.append(reinterpret_cast<const char*>(buf), bytes_read);
+            }
+
+            // Zalogujeme výstup (musí být ukončen null-terminátorem)
+            ESP_LOGD("http_request", "Response: %s", response_body.c_str());
         }
         else
         {
-            std::shared_ptr<http_request::HttpContainer> response = this->request_->post(
-                this->service_url, body, headers);
-
-            if (response->status_code == 200)
-            {
-                uint8_t buf[64]; // Alokujeme statický buffer pro data
-                std::string response_body; // Řetězec pro uložení celé odpovědi (postupně načítán)
-
-                // Načítáme ze streamu až do konce
-                int bytes_read;
-                while ((bytes_read = response->read(buf, sizeof(buf))) > 0)
-                {
-                    response_body.append(reinterpret_cast<const char*>(buf), bytes_read);
-                }
-
-                // Zalogujeme výstup (musí být ukončen null-terminátorem)
-                ESP_LOGD("http_request", "Response: %s", response_body.c_str());
-            }
-            else
-            {
-                ESP_LOGE("http_request", "Failed! HTTP Status: %d", response->status_code);
-            }
-            response->end();
-            delete &body;
+            ESP_LOGE("http_request", "Failed! HTTP Status: %d", response->status_code);
         }
+        response->end();
     }
 
     bool sensor_precondition(std::vector<EntityBase*> objs, EntityBase* sensor)
