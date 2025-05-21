@@ -70,11 +70,6 @@ namespace esphome::influxdb2
         this->service_url = this->service_url + "://" + this->host + ":" + to_string(this->port) +
             "/api/v2/write?org=" + this->org_id + "&bucket=" + this->bucket + "&precision=ns";
 
-#ifdef USE_ESP_IDF
-        this->request_ = new http_request::HttpRequestIDF();
-#else
-            this->request_ = new http_request::HttpRequestArduino();
-#endif
         this->request_->setup();
 
         this->request_->set_useragent("ESPHome InfluxDB Bot");
@@ -138,45 +133,49 @@ namespace esphome::influxdb2
 
         std::string body = measurement + tags + " " + field_key + "=" + (is_string ? ("\"" + value + "\"") : value);
 
+        ESP_LOGD("influxdb_writer", "Measurement: %s", measurement.c_str());
+        ESP_LOGD("influxdb_writer", "Tags: %s", tags.c_str());
+        ESP_LOGD("influxdb_writer", "Field key: %s", field_key.c_str());
+        ESP_LOGD("influxdb_writer", "Value: %s", value.c_str());
+
         ESP_LOGD(TAG, "InfluxDB URL: %s", this->service_url.c_str());
         ESP_LOGD(TAG, "InfluxDB headers: %s", headers_to_string(headers).c_str());
         ESP_LOGD(TAG, "InfluxDB packet: %s", body.c_str());
         ESP_LOGD("http_request", "Body size: %lu", body.size());
         ESP_LOGD("http_request", "Header count: %lu", headers.size());
 
-        // constexpr esp_task_wdt_config_t cfg = {
-        //     .timeout_ms = 500,
-        //     .idle_core_mask = 0,
-        //     .trigger_panic = false
-        // };
 
-        // esp_task_wdt_init(&cfg); // Timeout 10 sekund
-        // esp_task_wdt_add(nullptr); // Přidání aktuální úlohy k watchdogu
-
-        std::shared_ptr<http_request::HttpContainer> response = this->request_->post(this->service_url, body, headers);
-
-        if (response->status_code == 200)
+        if (this->request_ == nullptr)
         {
-            uint8_t buf[64]; // Alokujeme statický buffer pro data
-            std::string response_body; // Řetězec pro uložení celé odpovědi (postupně načítán)
-
-            // Načítáme ze streamu až do konce
-            int bytes_read;
-            while ((bytes_read = response->read(buf, sizeof(buf))) > 0)
-            {
-                response_body.append(reinterpret_cast<const char*>(buf), bytes_read);
-            }
-
-            // Zalogujeme výstup (musí být ukončen null-terminátorem)
-            ESP_LOGD("http_request", "Response: %s", response_body.c_str());
+            ESP_LOGE("http_request", "Client is nullptr");
         }
         else
         {
-            ESP_LOGE("http_request", "Failed! HTTP Status: %d", response->status_code);
+            std::shared_ptr<http_request::HttpContainer> response = this->request_->post(
+                this->service_url, body, headers);
+
+            if (response->status_code == 200)
+            {
+                uint8_t buf[64]; // Alokujeme statický buffer pro data
+                std::string response_body; // Řetězec pro uložení celé odpovědi (postupně načítán)
+
+                // Načítáme ze streamu až do konce
+                int bytes_read;
+                while ((bytes_read = response->read(buf, sizeof(buf))) > 0)
+                {
+                    response_body.append(reinterpret_cast<const char*>(buf), bytes_read);
+                }
+
+                // Zalogujeme výstup (musí být ukončen null-terminátorem)
+                ESP_LOGD("http_request", "Response: %s", response_body.c_str());
+            }
+            else
+            {
+                ESP_LOGE("http_request", "Failed! HTTP Status: %d", response->status_code);
+            }
+            response->end();
+            delete &body;
         }
-        response->end();
-        // esp_task_wdt_delete(nullptr);
-        delete &body;
     }
 
     bool sensor_precondition(std::vector<EntityBase*> objs, EntityBase* sensor)

@@ -18,7 +18,13 @@ namespace esphome::influxdb2
         virtual ~InfluxDBWriter() = default;
 
         InfluxDBWriter(): port(0), send_timeout(0), publish_all(false), https(false), precision(0),
-                          request_(nullptr)
+                          request_(
+#ifdef USE_ESP_IDF
+                              new http_request::HttpRequestIDF()
+#else
+                              new http_request::HttpRequestArduino();
+#endif
+                          )
         {
         }
 
