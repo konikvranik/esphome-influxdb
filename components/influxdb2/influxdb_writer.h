@@ -71,6 +71,7 @@ namespace esphome::influxdb2
 
     protected:
         void setup_client();
+        static std::string update_tags(const EntityBase* obj, const std::string& tags);
         static std::string escape_whitespace(const std::string& tags);
 #ifdef USE_BINARY_SENSOR
         void register_binary_sensor_callback(std::vector<EntityBase*> objs,

@@ -246,7 +246,7 @@ namespace esphome::influxdb2
                                           const std::string& tags, const std::string& field_key, bool state) const
     {
         ESP_LOGD(TAG, "Updating binary sensor: %s", field_key.c_str());
-        write(measurement, tags, field_key, state ? "t" : "f", false);
+        write(measurement, update_tags(obj, tags), field_key, state ? "t" : "f", false);
     }
 #endif
 
@@ -263,18 +263,46 @@ namespace esphome::influxdb2
             std::stringstream value;
             value << std::fixed << std::setprecision(this->precision) << state;
             ESP_LOGD(TAG, "Updating sensor: %s", field_key.c_str());
-            write(measurement, tags, field_key, value.str(), false);
+            write(measurement, update_tags(obj, tags), field_key, value.str(), false);
         }
     }
 #endif
 
 #ifdef USE_TEXT_SENSOR
+
     void InfluxDBWriter::on_sensor_update(text_sensor::TextSensor* obj, const std::string& measurement,
                                           const std::string& tags, const std::string& field_key,
                                           const std::string& state) const
     {
         ESP_LOGD(TAG, "Updating text sensor: %s", field_key.c_str());
-        write(measurement, tags, field_key, state, true);
+        write(measurement, update_tags(obj, tags), field_key, state, true);
     }
+
+
 #endif
+    std::string InfluxDBWriter::update_tags(const EntityBase* obj, const std::string& tags)
+    {
+        if (std::empty(tags))
+        {
+            if (std::empty(escape_whitespace(obj->get_name())))
+            {
+                return "";
+            }
+            else
+            {
+                return "friendly_name=" + escape_whitespace(obj->get_name());
+            }
+        }
+        else
+        {
+            if (std::empty(obj->get_name()))
+            {
+                return tags;
+            }
+            else
+            {
+                return tags + ",friendly_name=" + obj->get_name().c_str();
+            }
+        }
+    }
 } // namespace influxdb

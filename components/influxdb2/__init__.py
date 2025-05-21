@@ -100,4 +100,4 @@ def to_code(config):
 
 def join_tags(config):
     return ''.join(
-        ',{}={}'.format(re.sub(r'\s', r'\\\\\\0', tag), re.sub(r'\s', r'\\\\\\0', value)) for tag, value in config.items())
+        ',{}={}'.format(re.sub(r'\s', r'\\\\\\\\0', tag), re.sub(r'\s', r'\\\\\\\\0', value)) for tag, value in config.items())
