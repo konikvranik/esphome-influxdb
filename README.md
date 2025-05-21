@@ -9,7 +9,7 @@ Changes from Jepsson/esphome-influxdb:
 
 ## Installation
 Add this repository as an submodule in your esphome custom_compontents;
-`git clone https://github.com/CalvinSchwartz/esphome-influxdb custom_components/influxdb2`
+`git clone https://github.com/konikvranik/esphome-influxdb custom_components/influxdb2`
 
 ## Usage
 
@@ -19,7 +19,7 @@ Add `influxdb2` section to your ESPHome configuration file.
 
 ```yaml
 external_components:
-  - source: github://CalvinSchwartz/esphome-influxdb
+  - source: github://konikvranik/esphome-influxdb@influxdb2
     components: [ influxdb2 ]
 
 influxdb2:
