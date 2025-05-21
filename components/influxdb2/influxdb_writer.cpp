@@ -144,22 +144,18 @@ namespace esphome::influxdb2
         ESP_LOGD("http_request", "Body size: %lu", body.size());
         ESP_LOGD("http_request", "Header count: %lu", headers.size());
 
-        constexpr esp_task_wdt_config_t cfg = {
-            .timeout_ms = 500,
-            .idle_core_mask = 0,
-            .trigger_panic = false
-        };
+        // constexpr esp_task_wdt_config_t cfg = {
+        //     .timeout_ms = 500,
+        //     .idle_core_mask = 0,
+        //     .trigger_panic = false
+        // };
 
-        esp_task_wdt_init(&cfg); // Timeout 10 sekund
-        esp_task_wdt_add(nullptr); // Přidání aktuální úlohy k watchdogu
+        // esp_task_wdt_init(&cfg); // Timeout 10 sekund
+        // esp_task_wdt_add(nullptr); // Přidání aktuální úlohy k watchdogu
 
         std::shared_ptr<http_request::HttpContainer> response = this->request_->post(this->service_url, body, headers);
 
-        if (response->status_code != 200)
-        {
-            ESP_LOGE("http_request", "Failed! HTTP Status: %d", response->status_code);
-        }
-        else
+        if (response->status_code == 200)
         {
             uint8_t buf[64]; // Alokujeme statický buffer pro data
             std::string response_body; // Řetězec pro uložení celé odpovědi (postupně načítán)
@@ -174,8 +170,12 @@ namespace esphome::influxdb2
             // Zalogujeme výstup (musí být ukončen null-terminátorem)
             ESP_LOGD("http_request", "Response: %s", response_body.c_str());
         }
+        else
+        {
+            ESP_LOGE("http_request", "Failed! HTTP Status: %d", response->status_code);
+        }
         response->end();
-        esp_task_wdt_delete(nullptr);
+        // esp_task_wdt_delete(nullptr);
         delete &body;
     }
 
