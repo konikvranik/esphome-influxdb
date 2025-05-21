@@ -28,16 +28,16 @@ namespace esphome::influxdb2
 
         void dump_config() override;
 #ifdef USE_BINARY_SENSOR
-        void on_sensor_update(
-            std::string measurement, std::string tags, const std::string& field_key,
-            bool state) const;
+        void on_sensor_update(binary_sensor::BinarySensor* obj,
+                              std::string measurement, std::string tags, const std::string& field_key,
+                              bool state) const;
 #endif
 #ifdef USE_SENSOR
-        void on_sensor_update(std::string measurement,
+        void on_sensor_update(sensor::Sensor* obj, std::string measurement,
                               std::string tags, const std::string& field_key, float state) const;
 #endif
 #ifdef USE_TEXT_SENSOR
-        void on_sensor_update(std::string measurement,
+        void on_sensor_update(text_sensor::TextSensor* obj, std::string measurement,
                               std::string tags, const std::string& field_key, const std::string& state) const;
 #endif
 
