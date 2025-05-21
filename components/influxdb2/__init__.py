@@ -66,7 +66,7 @@ def to_code(config):
 
     cg.add(var.set_host(config[CONF_HOST]))
     cg.add(var.set_port(config[CONF_PORT]))
-    cg.add(var.set_orgid(config[CONF_ORG_ID]))
+    cg.add(var.set_org_id(config[CONF_ORG_ID]))
     cg.add(var.set_token(config[CONF_TOKEN]))
     cg.add(var.set_bucket(config[CONF_BUCKET]))
     cg.add(var.set_send_timeout(config[CONF_SEND_TIMEOUT]))

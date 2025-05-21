@@ -16,6 +16,7 @@ namespace esphome::influxdb2
 {
     static const char* TAG = "influxdb_jab";
 
+
     void InfluxDBWriter::setup()
     {
         ESP_LOGCONFIG(TAG, "Setting up InfluxDB Writer...");
@@ -23,6 +24,39 @@ namespace esphome::influxdb2
         for (const auto& fun : setup_callbacks)
             objs.push_back(fun());
 
+        setup_client();
+
+        if (publish_all && false)
+        {
+#ifdef USE_BINARY_SENSOR
+            for (auto* obj : App.get_binary_sensors())
+            {
+                register_binary_sensor_callback(objs, obj);
+            }
+#endif
+#ifdef USE_SENSOR
+
+            for (auto* obj : App.get_sensors())
+            {
+                register_sensor_callback(objs, obj);
+            }
+#endif
+#ifdef USE_TEXT_SENSOR
+
+            for (auto* obj : App.get_text_sensors())
+            {
+                register_text_sensor_callback(objs, obj);
+            }
+#endif
+        }
+    }
+
+    void InfluxDBWriter::loop()
+    {
+    }
+
+    void InfluxDBWriter::setup_client()
+    {
         if (this->https)
         {
             this->service_url = "https";
@@ -32,7 +66,7 @@ namespace esphome::influxdb2
             this->service_url = "http";
         }
         this->service_url = this->service_url + "://" + this->host + ":" + to_string(this->port) +
-            "/api/v2/write?org=" + this->orgid + "&bucket=" + this->bucket + "&precision=ns";
+            "/api/v2/write?org=" + this->org_id + "&bucket=" + this->bucket + "&precision=ns";
 
 #ifdef USE_ESP_IDF
         this->request_ = new http_request::HttpRequestIDF();
@@ -43,62 +77,6 @@ namespace esphome::influxdb2
 
         this->request_->set_useragent("ESPHome InfluxDB Bot");
         this->request_->set_timeout(this->send_timeout);
-
-        if (publish_all)
-        {
-#ifdef USE_BINARY_SENSOR
-            for (auto* obj : App.get_binary_sensors())
-            {
-                if (
-                    !obj->is_internal()
-                    &&
-                    std::none_of(objs.begin(), objs.end(), [&obj](const EntityBase* o) { return o == obj; })
-                )
-                {
-                    obj->add_on_state_callback([this, obj](bool state)
-                    {
-                        this->on_sensor_update(obj, obj->get_object_id(), tags, field_key, state);
-                    });
-                }
-            }
-#endif
-#ifdef USE_SENSOR
-            for (auto* obj : App.get_sensors())
-            {
-                if (
-                    !obj->is_internal()
-                    &&
-                    std::none_of(objs.begin(), objs.end(), [&obj](const EntityBase* o) { return o == obj; })
-                )
-                {
-                    obj->add_on_state_callback([this, obj](float state)
-                    {
-                        this->on_sensor_update(obj, obj->get_object_id(), tags, field_key, state);
-                    });
-                }
-            }
-#endif
-#ifdef USE_TEXT_SENSOR
-            for (auto* obj : App.get_text_sensors())
-            {
-                if (
-                    !obj->is_internal()
-                    &&
-                    std::none_of(objs.begin(), objs.end(), [&obj](const EntityBase* o) { return o == obj; })
-                )
-                {
-                    obj->add_on_state_callback([this, obj](const std::string& state)
-                    {
-                        this->on_sensor_update(obj, obj->get_object_id(), tags, field_key, state);
-                    });
-                }
-            }
-#endif
-        }
-    }
-
-    void InfluxDBWriter::loop()
-    {
     }
 
     void InfluxDBWriter::write(std::string measurement,
@@ -125,7 +103,7 @@ namespace esphome::influxdb2
         header.name = "Content-Type";
         header.value = "text/plain";
         headers.push_back(header);
-        if ((!this->orgid.empty()))
+        if ((!this->org_id.empty()))
         {
             header.name = "Authorization";
             header.value = this->token;
@@ -135,6 +113,53 @@ namespace esphome::influxdb2
         this->request_->post(this->service_url, line, headers);
 
         ESP_LOGD(TAG, "InfluxDB packet: %s", line.c_str());
+    }
+
+    void InfluxDBWriter::register_binary_sensor_callback(std::vector<EntityBase*> objs,
+                                                         binary_sensor::BinarySensor* binary_sensor) const
+    {
+        if (
+            !binary_sensor->is_internal()
+            &&
+            std::none_of(objs.begin(), objs.end(), [&binary_sensor](const EntityBase* o) { return o == binary_sensor; })
+        )
+        {
+            binary_sensor->add_on_state_callback([this, binary_sensor](bool state)
+            {
+                this->on_sensor_update(binary_sensor, binary_sensor->get_object_id(), tags, field_key, state);
+            });
+        }
+    }
+
+    void InfluxDBWriter::register_sensor_callback(std::vector<EntityBase*> objs, sensor::Sensor* sensor) const
+    {
+        if (
+            !sensor->is_internal()
+            &&
+            std::none_of(objs.begin(), objs.end(), [&sensor](const EntityBase* o) { return o == sensor; })
+        )
+        {
+            sensor->add_on_state_callback([this, sensor](float state)
+            {
+                this->on_sensor_update(sensor, sensor->get_object_id(), tags, field_key, state);
+            });
+        }
+    }
+
+    void InfluxDBWriter::register_text_sensor_callback(std::vector<EntityBase*> objs,
+                                                       text_sensor::TextSensor* text_sensor) const
+    {
+        if (
+            !text_sensor->is_internal()
+            &&
+            std::none_of(objs.begin(), objs.end(), [&text_sensor](const EntityBase* o) { return o == text_sensor; })
+        )
+        {
+            text_sensor->add_on_state_callback([this, text_sensor](const std::string& state)
+            {
+                this->on_sensor_update(text_sensor, text_sensor->get_object_id(), tags, field_key, state);
+            });
+        }
     }
 
     void InfluxDBWriter::dump_config()
