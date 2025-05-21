@@ -49,6 +49,8 @@ namespace esphome::influxdb2
         void set_bucket(std::string bucket) { this->bucket = std::move(bucket); };
         void set_send_timeout(int timeout) { send_timeout = timeout; };
         void set_publish_all(bool all) { publish_all = all; };
+        void set_field_key(std::string field_key) { this->field_key = std::move(field_key); };
+        void set_tags(std::string tags) { this->tags = std::move(tags); };
 
         void add_setup_callback(const std::function<EntityBase *()>& fun)
         {

@@ -1,8 +1,8 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.const import CONF_ID, CONF_PORT, CONF_USERNAME, CONF_PASSWORD
-from esphome.core import coroutine_with_priority
+from esphome.const import CONF_ID, CONF_PORT
 from esphome.core import CORE
+from esphome.core import coroutine_with_priority
 
 DEPENDENCIES = ['network']
 AUTO_LOAD = ['http_request']
@@ -72,12 +72,13 @@ def to_code(config):
     cg.add(var.set_send_timeout(config[CONF_SEND_TIMEOUT]))
     cg.add(var.set_publish_all(config[CONF_PUBLISH_ALL]))
     cg.add(var.set_https(config[CONF_HTTPS]))
+    cg.add(var.set_field_key(config[CONF_FIELD_KEY]))
+    cg.add(var.set_tags(join_tags(config[CONF_TAGS])))
     cg.add(var.set_precision(config[CONF_PRECISION]))
 
     for sensor_id, sensor_config in config[CONF_SENSORS].items():
         if not sensor_config[CONF_IGNORE]:
-            tags = ''.join(',{}={}'.format(tag, value) for tag, value in {
-                **config[CONF_TAGS], **sensor_config[CONF_TAGS]}.items())
+            tags = join_tags({**config[CONF_TAGS], **sensor_config[CONF_TAGS]})
             field_key = sensor_config[CONF_FIELD_KEY]
             if CONF_MEASUREMENT in sensor_config:
                 measurement = f"\"{sensor_config[CONF_MEASUREMENT]}\""
@@ -85,10 +86,14 @@ def to_code(config):
                 measurement = f"{sensor_id}->get_object_id()"
 
             cg.add(var.add_setup_callback(cg.RawExpression(
-                f"[]() -> EntityBase* {{ {sensor_id}->add_on_state_callback([](float state) {{ {config[CONF_ID]}->on_sensor_update({sensor_id}, {measurement}, \"{tags}\", \"{field_key if field_key else 'value'}\", state); }}); return {sensor_id}; }}")))
+                f"[]() -> EntityBase* {{ {sensor_id}->add_on_state_callback([](float state) {{ {config[CONF_ID]}->on_sensor_update({sensor_id}, {measurement}, \"{tags}\", \"{field_key}\", state); }}); return {sensor_id}; }}")))
         else:
             cg.add(var.add_setup_callback(cg.RawExpression(
                 f"[]() -> EntityBase* {{ return {sensor_id}; }}")))
 
     cg.add_define('USE_INFLUXDB')
     cg.add_global(influxdb_ns.using)
+
+
+def join_tags(config):
+    return ''.join(',{}={}'.format(tag, value) for tag, value in config.items())

@@ -20,11 +20,13 @@ namespace esphome::influxdb2
     void InfluxDBWriter::setup()
     {
         ESP_LOGCONFIG(TAG, "Setting up InfluxDB Writer...");
+
+        setup_client();
+
         std::vector<EntityBase*> objs;
         for (const auto& fun : setup_callbacks)
             objs.push_back(fun());
 
-        setup_client();
 
         if (publish_all)
         {
@@ -149,21 +151,10 @@ namespace esphome::influxdb2
             sensor_precondition(std::move(objs), sensor)
         )
         {
-            //////////////////////////
-            [this, sensor]() -> EntityBase*
+            sensor->add_on_state_callback([this, sensor](float state)
             {
-                sensor->add_on_state_callback([this, sensor](float state)
-                {
-                    this->on_sensor_update(sensor, sensor->get_object_id(), this->tags, this->field_key, state);
-                });
-                return sensor;
-            };
-
-            ////////////////////////////
-            // sensor->add_on_state_callback([this, sensor](float state)
-            // {
-            //     this->on_sensor_update(sensor, sensor->get_object_id(), this->tags, this->field_key, state);
-            // });
+                this->on_sensor_update(sensor, sensor->get_object_id(), this->tags, this->field_key, state);
+            });
         }
     }
 
