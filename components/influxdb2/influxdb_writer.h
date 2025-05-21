@@ -64,7 +64,7 @@ namespace esphome::influxdb2
                                              binary_sensor::BinarySensor* binary_sensor) const;
         void register_sensor_callback(std::vector<EntityBase*> objs, sensor::Sensor* sensor) const;
         void register_text_sensor_callback(std::vector<EntityBase*> objs, text_sensor::TextSensor* text_sensor) const;
-        void write(const std::string& measurement, const std::string& tags, const std::string& field_key,
+        void write(std::string& measurement, const std::string& tags, const std::string& field_key,
                    const std::string& value,
                    bool is_string) const;
 

@@ -92,7 +92,7 @@ namespace esphome::influxdb2
         }
     }
 
-    void InfluxDBWriter::write(const std::string& measurement,
+    void InfluxDBWriter::write(std::string& measurement,
                                const std::string& tags,
                                const std::string& field_key,
                                const std::string& value,
