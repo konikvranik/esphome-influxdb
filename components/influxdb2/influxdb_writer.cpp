@@ -95,7 +95,7 @@ namespace esphome::influxdb2
                 i++; // Skip the inserted backslash
             }
         }
-        std::string line = measurement + tags + " " + field_key + "=" + (is_string ? ("\"" + value + "\"") : value);
+        std::string body = measurement + tags + " " + field_key + "=" + (is_string ? ("\"" + value + "\"") : value);
 
         std::list<http_request::Header> headers;
         http_request::Header header;
@@ -110,8 +110,8 @@ namespace esphome::influxdb2
         }
 
         ESP_LOGD(TAG, "InfluxDB URL: %s", this->service_url.c_str());
-        ESP_LOGD(TAG, "InfluxDB packet: %s", line.c_str());
-        this->request_->post(this->service_url, line, headers);
+        ESP_LOGD(TAG, "InfluxDB packet: %s", body.c_str());
+        this->request_->post(this->service_url, body, headers);
     }
 
     bool sensor_precondition(std::vector<EntityBase*> objs, EntityBase* sensor)
