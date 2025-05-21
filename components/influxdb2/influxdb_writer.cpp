@@ -165,7 +165,7 @@ namespace esphome::influxdb2
         {
             text_sensor->add_on_state_callback([this, text_sensor](const std::string& state)
             {
-                this->on_sensor_update(text_sensor, text_sensor->get_object_id(), tags, field_key, state);
+                this->on_sensor_update(text_sensor, text_sensor->get_object_id(), this->tags, this->field_key, state);
             });
         }
     }
@@ -178,10 +178,8 @@ namespace esphome::influxdb2
     }
 
 #ifdef USE_BINARY_SENSOR
-    void InfluxDBWriter::on_sensor_update(binary_sensor::BinarySensor* obj,
-                                          const std::string& measurement, const std::string& tags,
-                                          const std::string& field_key,
-                                          bool state) const
+    void InfluxDBWriter::on_sensor_update(binary_sensor::BinarySensor* obj, const std::string& measurement,
+                                          const std::string& tags, const std::string& field_key, bool state) const
     {
         ESP_LOGD(TAG, "Updating binary sensor: %s", field_key.c_str());
         write(measurement, tags, field_key, state ? "t" : "f", false);
@@ -189,10 +187,8 @@ namespace esphome::influxdb2
 #endif
 
 #ifdef USE_SENSOR
-    void InfluxDBWriter::on_sensor_update(sensor::Sensor* obj,
-                                          const std::string& measurement, const std::string& tags,
-                                          const std::string& field_key,
-                                          float state) const
+    void InfluxDBWriter::on_sensor_update(sensor::Sensor* obj, const std::string& measurement, const std::string& tags,
+                                          const std::string& field_key, float state) const
     {
 #ifdef USE_ESP_IDF
         if (!std::isnan(state))
@@ -209,9 +205,8 @@ namespace esphome::influxdb2
 #endif
 
 #ifdef USE_TEXT_SENSOR
-    void InfluxDBWriter::on_sensor_update(text_sensor::TextSensor* obj,
-                                          const std::string& measurement, const std::string& tags,
-                                          const std::string& field_key,
+    void InfluxDBWriter::on_sensor_update(text_sensor::TextSensor* obj, const std::string& measurement,
+                                          const std::string& tags, const std::string& field_key,
                                           const std::string& state) const
     {
         ESP_LOGD(TAG, "Updating text sensor: %s", field_key.c_str());

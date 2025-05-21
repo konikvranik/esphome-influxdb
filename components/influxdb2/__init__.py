@@ -10,7 +10,7 @@ AUTO_LOAD = ['http_request']
 influxdb_ns = cg.esphome_ns.namespace('influxdb2')
 
 InfluxDBWriter = (influxdb_ns.class_('InfluxDBWriter', cg.Component, cg.Controller)
-                  if (CORE.using_esp_idf)
+                  if CORE.using_esp_idf
                   else influxdb_ns.class_('InfluxDBWriter', cg.Component, cg.Controller))
 
 CONF_HOST = 'host'
@@ -75,17 +75,17 @@ def to_code(config):
     cg.add(var.set_precision(config[CONF_PRECISION]))
 
     for sensor_id, sensor_config in config[CONF_SENSORS].items():
-        if sensor_config[CONF_IGNORE] == False:
+        if not sensor_config[CONF_IGNORE]:
             tags = ''.join(',{}={}'.format(tag, value) for tag, value in {
                 **config[CONF_TAGS], **sensor_config[CONF_TAGS]}.items())
             field_key = sensor_config[CONF_FIELD_KEY]
-            if 'measurement' in sensor_config:
+            if CONF_MEASUREMENT in sensor_config:
                 measurement = f"\"{sensor_config[CONF_MEASUREMENT]}\""
             else:
                 measurement = f"{sensor_id}->get_object_id()"
 
             cg.add(var.add_setup_callback(cg.RawExpression(
-                f"[]() -> EntityBase* {{ {sensor_id}->add_on_state_callback([](float state) {{ {config[CONF_ID]}->on_sensor_update({sensor_id}, {measurement}, \"{tags}\", \"{field_key}\", state); }}); return {sensor_id}; }}")))
+                f"[]() -> EntityBase* {{ {sensor_id}->add_on_state_callback([](float state) {{ {config[CONF_ID]}->on_sensor_update({sensor_id}, {measurement}, \"{tags}\", \"{field_key if field_key else 'value'}\", state); }}); return {sensor_id}; }}")))
         else:
             cg.add(var.add_setup_callback(cg.RawExpression(
                 f"[]() -> EntityBase* {{ return {sensor_id}; }}")))
