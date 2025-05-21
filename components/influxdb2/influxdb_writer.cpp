@@ -14,7 +14,7 @@
 
 namespace esphome::influxdb2
 {
-    static const char* TAG = "influxdb_jab";
+    static const char* TAG = "influxdb2";
 
 
     void InfluxDBWriter::setup()
@@ -133,21 +133,21 @@ namespace esphome::influxdb2
 
         std::string body = measurement + tags + " " + field_key + "=" + (is_string ? ("\"" + value + "\"") : value);
 
-        ESP_LOGD("influxdb_writer", "Measurement: %s", measurement.c_str());
-        ESP_LOGD("influxdb_writer", "Tags: %s", tags.c_str());
-        ESP_LOGD("influxdb_writer", "Field key: %s", field_key.c_str());
-        ESP_LOGD("influxdb_writer", "Value: %s", value.c_str());
+        ESP_LOGV(TAG, "Measurement: %s", measurement.c_str());
+        ESP_LOGV(TAG, "Tags: %s", tags.c_str());
+        ESP_LOGV(TAG, "Field key: %s", field_key.c_str());
+        ESP_LOGV(TAG, "Value: %s", value.c_str());
 
         ESP_LOGD(TAG, "InfluxDB URL: %s", this->service_url.c_str());
         ESP_LOGD(TAG, "InfluxDB headers: %s", headers_to_string(headers).c_str());
-        ESP_LOGD(TAG, "InfluxDB packet: %s", body.c_str());
-        ESP_LOGD("http_request", "Body size: %lu", body.size());
-        ESP_LOGD("http_request", "Header count: %lu", headers.size());
+        ESP_LOGD(TAG, "InfluxDB body: %s", body.c_str());
+        ESP_LOGV(TAG, "Body size: %lu", body.size());
+        ESP_LOGV(TAG, "Header count: %lu", headers.size());
 
 
         if (this->request_ == nullptr)
         {
-            ESP_LOGE("http_request", "Client is nullptr");
+            ESP_LOGE(TAG, "Client is nullptr");
             return;
         }
         std::shared_ptr<http_request::HttpContainer> response = this->request_->post(
@@ -161,7 +161,7 @@ namespace esphome::influxdb2
 
         if (response->status_code < 300)
         {
-            ESP_LOGD("http_request", "Response satus: %d", response->status_code);
+            ESP_LOGD(TAG, "Response satus: %d", response->status_code);
         }
         else
         {
@@ -174,7 +174,7 @@ namespace esphome::influxdb2
                 response_body.append(reinterpret_cast<const char*>(buf), bytes_read);
             }
 
-            ESP_LOGE("http_request", "Failed! HTTP Status %d: %s", response->status_code, response_body.c_str());
+            ESP_LOGE(TAG, "Failed! HTTP Status %d: %s", response->status_code, response_body.c_str());
         }
         response->end();
     }
