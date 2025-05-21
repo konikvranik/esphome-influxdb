@@ -10,57 +10,74 @@
 #include "esphome/components/logger/logger.h"
 #endif
 
-namespace esphome {
-    namespace influxdb2 {
-        static const char *TAG = "influxdb_jab";
+namespace esphome
+{
+    namespace influxdb2
+    {
+        static const char* TAG = "influxdb_jab";
 
-        void InfluxDBWriter::setup() {
+        void InfluxDBWriter::setup()
+        {
             ESP_LOGCONFIG(TAG, "Setting up InfluxDB Writer...");
-            std::vector<EntityBase *> objs;
-            for (auto fun: setup_callbacks)
+            std::vector<EntityBase*> objs;
+            for (auto fun : setup_callbacks)
                 objs.push_back(fun());
 
-            if (this->https) {
+            if (this->https)
+            {
                 this->service_url = "https";
-            } else {
+            }
+            else
+            {
                 this->service_url = "http";
             }
             this->service_url = this->service_url + "://" + this->host + ":" + to_string(this->port) +
-                                "/api/v2/write?org=" + this->orgid + "&bucket=" + this->bucket + "&precision=ns";
+                "/api/v2/write?org=" + this->orgid + "&bucket=" + this->bucket + "&precision=ns";
 
+#ifdef USE_ESP_IDF
             this->request_ = new http_request::HttpRequestIDF();
+#else
+            this->request_ = new http_request::HttpRequestArduino();
+#endif
             this->request_->setup();
 
             this->request_->set_useragent("ESPHome InfluxDB Bot");
             this->request_->set_timeout(this->send_timeout);
 
-            if (publish_all) {
+            if (publish_all)
+            {
 #ifdef USE_BINARY_SENSOR
-                for (auto *obj: App.get_binary_sensors()) {
+                for (auto* obj : App.get_binary_sensors())
+                {
                     if (!obj->is_internal() &&
                         std::none_of(objs.begin(), objs.end(),
-                                     [&obj](EntityBase *o) { return o == obj; }))
-                        obj->add_on_state_callback([this, obj](bool state) {
+                                     [&obj](EntityBase* o) { return o == obj; }))
+                        obj->add_on_state_callback([this, obj](bool state)
+                        {
                             this->on_sensor_update(obj, obj->get_object_id(), tags, field_key, state);
                         });
                 }
 #endif
 #ifdef USE_SENSOR
-                for (auto *obj: App.get_sensors()) {
+                for (auto* obj : App.get_sensors())
+                {
                     if (!obj->is_internal() &&
                         std::none_of(objs.begin(), objs.end(),
-                                     [&obj](EntityBase *o) { return o == obj; }))
-                        obj->add_on_state_callback([this, obj](float state) {
+                                     [&obj](EntityBase* o) { return o == obj; }))
+                        obj->add_on_state_callback([this, obj](float state)
+                        {
                             this->on_sensor_update(obj, obj->get_object_id(), tags, field_key, state);
                         });
                 }
 #endif
 #ifdef USE_TEXT_SENSOR
-                for (auto *obj: App.get_text_sensors()) {
+                for (auto* obj : App.get_text_sensors())
+                {
                     if (!obj->is_internal() &&
                         std::none_of(objs.begin(), objs.end(),
-                                     [&obj](EntityBase *o) { return o == obj; }))
-                        obj->add_on_state_callback([this, obj](std::string state) {
+                                     [&obj](EntityBase* o) { return o == obj; }))
+                        obj->add_on_state_callback([this, obj](std::string state)
+                        {
                             this->on_sensor_update(obj, obj->get_object_id(), tags, field_key, state);
                         });
                 }
@@ -68,60 +85,74 @@ namespace esphome {
             }
         }
 
-        void InfluxDBWriter::loop() {
+        void InfluxDBWriter::loop()
+        {
         }
 
         void InfluxDBWriter::write(std::string measurement,
                                    std::string tags,
                                    const std::string field_key,
                                    const std::string value,
-                                   const bool is_string) {
+                                   const bool is_string)
+        {
             std::replace(measurement.begin(), measurement.end(), '-', '_');
-            for (size_t i = 0; i < tags.length(); ++i) {
+            for (size_t i = 0; i < tags.length(); ++i)
+            {
                 // Add the escape char "\" to all whitespaces in the tags with an "\ "
-                if (tags[i] == ' ') {
+                if (tags[i] == ' ')
+                {
                     tags.insert(i, "\\");
                     i++; // Skip the inserted backslash
                 }
             }
             std::string line =
-                    measurement + tags + " " + field_key + "=" + (is_string ? ("\"" + value + "\"") : value);
+                measurement + tags + " " + field_key + "=" + (is_string ? ("\"" + value + "\"") : value);
 
             std::list<http_request::Header> headers;
             http_request::Header header;
             header.name = "Content-Type";
             header.value = "text/plain";
             headers.push_back(header);
-            if ((this->orgid.length() > 0) && (this->token.length() > 0)) {
+            if ((this->orgid.length() > 0) && (this->token.length() > 0))
+            {
                 header.name = "Authorization";
                 header.value = this->token.c_str();
                 headers.push_back(header);
             }
 
-            this->request_->post(this->service_url,line.c_str(),headers);
+            this->request_->post(this->service_url, line.c_str(), headers);
 
             ESP_LOGD(TAG, "InfluxDB packet: %s", line.c_str());
         }
 
-        void InfluxDBWriter::dump_config() {
+        void InfluxDBWriter::dump_config()
+        {
             ESP_LOGCONFIG(TAG, "InfluxDB Writer:");
             ESP_LOGCONFIG(TAG, "  Address: %s:%u", host.c_str(), port);
             ESP_LOGCONFIG(TAG, "  Bucket: %s", bucket.c_str());
         }
 
 #ifdef USE_BINARY_SENSOR
-        void InfluxDBWriter::on_sensor_update(binary_sensor::BinarySensor *obj,
+        void InfluxDBWriter::on_sensor_update(binary_sensor::BinarySensor* obj,
                                               std::string measurement, std::string tags, std::string field_key,
-                                              bool state) {
+                                              bool state)
+        {
             write(measurement, tags, field_key, state ? "t" : "f", false);
         }
 #endif
 
 #ifdef USE_SENSOR
-        void InfluxDBWriter::on_sensor_update(sensor::Sensor *obj,
+        void InfluxDBWriter::on_sensor_update(sensor::Sensor* obj,
                                               std::string measurement, std::string tags, std::string field_key,
-                                              float state) {
-            if (!std::isnan(state)) {
+                                              float state)
+        {
+#ifdef USE_ESP_IDF
+            if (!std::isnan(state))
+            {
+#else
+            if (!isnan(state)) {
+#endif
+
                 std::stringstream value;
                 value << std::fixed << std::setprecision(this->precision) << state;
                 write(measurement, tags, field_key, value.str(), false);
@@ -130,9 +161,10 @@ namespace esphome {
 #endif
 
 #ifdef USE_TEXT_SENSOR
-        void InfluxDBWriter::on_sensor_update(text_sensor::TextSensor *obj,
+        void InfluxDBWriter::on_sensor_update(text_sensor::TextSensor* obj,
                                               std::string measurement, std::string tags, std::string field_key,
-                                              std::string state) {
+                                              std::string state)
+        {
             write(measurement, tags, field_key, state, true);
         }
 #endif

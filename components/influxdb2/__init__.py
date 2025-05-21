@@ -8,8 +8,10 @@ DEPENDENCIES = ['network']
 AUTO_LOAD = ['http_request']
 
 influxdb_ns = cg.esphome_ns.namespace('influxdb2')
-InfluxDBWriter = influxdb_ns.class_(
-    'InfluxDBWriter', cg.Component, cg.Controller)
+
+InfluxDBWriter = (influxdb_ns.class_('InfluxDBWriter', cg.Component, cg.Controller)
+                  if (CORE.using_esp_idf)
+                  else influxdb_ns.class_('InfluxDBWriter', cg.Component, cg.Controller))
 
 CONF_HOST = 'host'
 CONF_ORG_ID = 'orgid'
@@ -26,17 +28,16 @@ CONF_HTTPS = 'https'
 CONF_PRECISION = 'precision'
 CONF_FIELD_KEY = 'field_key'
 
-
 SENSOR_SCHEMA = cv.Schema({
     cv.validate_id_name:
-    cv.Schema({
-        cv.Optional(CONF_IGNORE, default=False): cv.boolean,
-        cv.Optional(CONF_MEASUREMENT): cv.string,
-        cv.Optional(CONF_TAGS, default={}): cv.Schema({
-            cv.string: cv.string
-        }),
-        cv.Optional(CONF_FIELD_KEY, default='value'): cv.string_strict,
-    })
+        cv.Schema({
+            cv.Optional(CONF_IGNORE, default=False): cv.boolean,
+            cv.Optional(CONF_MEASUREMENT): cv.string,
+            cv.Optional(CONF_TAGS, default={}): cv.Schema({
+                cv.string: cv.string
+            }),
+            cv.Optional(CONF_FIELD_KEY, default='value'): cv.string_strict,
+        })
 })
 
 CONFIG_SCHEMA = cv.Schema({
@@ -44,7 +45,7 @@ CONFIG_SCHEMA = cv.Schema({
     cv.Required(CONF_HOST): cv.domain,
     cv.Optional(CONF_PORT, default=8086): cv.port,
     cv.Required(CONF_ORG_ID): cv.string_strict,
-#    cv.Optional(CONF_DEVICE): cv.string_strict,
+    #    cv.Optional(CONF_DEVICE): cv.string_strict,
     cv.Required(CONF_TOKEN): cv.string_strict,
     cv.Required(CONF_BUCKET): cv.string_strict,
     cv.Optional(CONF_SEND_TIMEOUT, default='500ms'): cv.positive_time_period_milliseconds,
@@ -73,11 +74,10 @@ def to_code(config):
     cg.add(var.set_https(config[CONF_HTTPS]))
     cg.add(var.set_precision(config[CONF_PRECISION]))
 
-
     for sensor_id, sensor_config in config[CONF_SENSORS].items():
         if sensor_config[CONF_IGNORE] == False:
             tags = ''.join(',{}={}'.format(tag, value) for tag, value in {
-                           **config[CONF_TAGS], **sensor_config[CONF_TAGS]}.items())
+                **config[CONF_TAGS], **sensor_config[CONF_TAGS]}.items())
             field_key = sensor_config[CONF_FIELD_KEY]
             if 'measurement' in sensor_config:
                 measurement = f"\"{sensor_config[CONF_MEASUREMENT]}\""
