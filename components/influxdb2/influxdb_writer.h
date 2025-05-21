@@ -29,16 +29,16 @@ namespace esphome::influxdb2
         void dump_config() override;
 #ifdef USE_BINARY_SENSOR
         void on_sensor_update(binary_sensor::BinarySensor* obj,
-                              std::string measurement, std::string tags, const std::string& field_key,
+                              const std::string& measurement, const std::string& tags, const std::string& field_key,
                               bool state) const;
 #endif
 #ifdef USE_SENSOR
-        void on_sensor_update(sensor::Sensor* obj, std::string measurement,
-                              std::string tags, const std::string& field_key, float state) const;
+        void on_sensor_update(sensor::Sensor* obj, const std::string& measurement,
+                              const std::string& tags, const std::string& field_key, float state) const;
 #endif
 #ifdef USE_TEXT_SENSOR
-        void on_sensor_update(text_sensor::TextSensor* obj, std::string measurement,
-                              std::string tags, const std::string& field_key, const std::string& state) const;
+        void on_sensor_update(text_sensor::TextSensor* obj, const std::string& measurement,
+                              const std::string& tags, const std::string& field_key, const std::string& state) const;
 #endif
 
         void set_host(std::string host) { this->host = std::move(host); };
@@ -59,11 +59,13 @@ namespace esphome::influxdb2
 
     protected:
         void setup_client();
+        static void escape_whitespace(std::string tags);
         void register_binary_sensor_callback(std::vector<EntityBase*> objs,
                                              binary_sensor::BinarySensor* binary_sensor) const;
         void register_sensor_callback(std::vector<EntityBase*> objs, sensor::Sensor* sensor) const;
         void register_text_sensor_callback(std::vector<EntityBase*> objs, text_sensor::TextSensor* text_sensor) const;
-        void write(std::string measurement, std::string tags, const std::string& field_key, const std::string& value,
+        void write(const std::string& measurement, const std::string& tags, const std::string& field_key,
+                   const std::string& value,
                    bool is_string) const;
 
         uint16_t port;

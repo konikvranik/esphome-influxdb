@@ -79,13 +79,8 @@ namespace esphome::influxdb2
         this->request_->set_timeout(this->send_timeout);
     }
 
-    void InfluxDBWriter::write(std::string measurement,
-                               std::string tags,
-                               const std::string& field_key,
-                               const std::string& value,
-                               const bool is_string) const
+    void InfluxDBWriter::escape_whitespace(std::string tags)
     {
-        std::replace(measurement.begin(), measurement.end(), '-', '_');
         for (size_t i = 0; i < tags.length(); ++i)
         {
             // Add the escape char "\" to all whitespaces in the tags with an "\ "
@@ -95,19 +90,30 @@ namespace esphome::influxdb2
                 i++; // Skip the inserted backslash
             }
         }
-        std::string body = measurement + tags + " " + field_key + "=" + (is_string ? ("\"" + value + "\"") : value);
+    }
+
+    void InfluxDBWriter::write(const std::string& measurement,
+                               const std::string& tags,
+                               const std::string& field_key,
+                               const std::string& value,
+                               const bool is_string) const
+    {
+        std::replace(measurement.begin(), measurement.end(), '-', '_');
+        escape_whitespace(tags);
 
         std::list<http_request::Header> headers;
         http_request::Header header;
         header.name = "Content-Type";
         header.value = "text/plain";
         headers.push_back(header);
-        if ((!this->org_id.empty()))
+        if ((!this->token.empty()))
         {
             header.name = "Authorization";
             header.value = this->token;
             headers.push_back(header);
         }
+
+        std::string body = measurement + tags + " " + field_key + "=" + (is_string ? ("\"" + value + "\"") : value);
 
         ESP_LOGD(TAG, "InfluxDB URL: %s", this->service_url.c_str());
         ESP_LOGD(TAG, "InfluxDB packet: %s", body.c_str());
@@ -131,7 +137,8 @@ namespace esphome::influxdb2
         {
             binary_sensor->add_on_state_callback([this, binary_sensor](bool state)
             {
-                this->on_sensor_update(binary_sensor, binary_sensor->get_object_id(), tags, field_key, state);
+                this->on_sensor_update(binary_sensor, binary_sensor->get_object_id(), this->tags, this->field_key,
+                                       state);
             });
         }
     }
@@ -144,7 +151,7 @@ namespace esphome::influxdb2
         {
             sensor->add_on_state_callback([this, sensor](float state)
             {
-                this->on_sensor_update(sensor, sensor->get_object_id(), tags, field_key, state);
+                this->on_sensor_update(sensor, sensor->get_object_id(), this->tags, this->field_key, state);
             });
         }
     }
@@ -172,16 +179,19 @@ namespace esphome::influxdb2
 
 #ifdef USE_BINARY_SENSOR
     void InfluxDBWriter::on_sensor_update(binary_sensor::BinarySensor* obj,
-                                          std::string measurement, std::string tags, const std::string& field_key,
+                                          const std::string& measurement, const std::string& tags,
+                                          const std::string& field_key,
                                           bool state) const
     {
-        write(std::move(measurement), std::move(tags), field_key, state ? "t" : "f", false);
+        ESP_LOGD(TAG, "Updating binary sensor: %s", field_key.c_str());
+        write(measurement, tags, field_key, state ? "t" : "f", false);
     }
 #endif
 
 #ifdef USE_SENSOR
     void InfluxDBWriter::on_sensor_update(sensor::Sensor* obj,
-                                          std::string measurement, std::string tags, const std::string& field_key,
+                                          const std::string& measurement, const std::string& tags,
+                                          const std::string& field_key,
                                           float state) const
     {
 #ifdef USE_ESP_IDF
@@ -192,17 +202,20 @@ namespace esphome::influxdb2
         {
             std::stringstream value;
             value << std::fixed << std::setprecision(this->precision) << state;
-            write(std::move(measurement), std::move(tags), field_key, value.str(), false);
+            ESP_LOGD(TAG, "Updating sensor: %s", field_key.c_str());
+            write(measurement, tags, field_key, value.str(), false);
         }
     }
 #endif
 
 #ifdef USE_TEXT_SENSOR
     void InfluxDBWriter::on_sensor_update(text_sensor::TextSensor* obj,
-                                          std::string measurement, std::string tags, const std::string& field_key,
+                                          const std::string& measurement, const std::string& tags,
+                                          const std::string& field_key,
                                           const std::string& state) const
     {
-        write(std::move(measurement), std::move(tags), field_key, state, true);
+        ESP_LOGD(TAG, "Updating text sensor: %s", field_key.c_str());
+        write(measurement, tags, field_key, state, true);
     }
 #endif
 } // namespace influxdb
