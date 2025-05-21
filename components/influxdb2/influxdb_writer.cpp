@@ -186,6 +186,7 @@ namespace esphome::influxdb2
             std::none_of(objs.begin(), objs.end(), [&sensor](const EntityBase* o) { return o == sensor; });
     }
 
+#ifdef USE_BINARY_SENSOR
     void InfluxDBWriter::register_binary_sensor_callback(std::vector<EntityBase*> objs,
                                                          binary_sensor::BinarySensor* binary_sensor) const
     {
@@ -200,7 +201,9 @@ namespace esphome::influxdb2
             });
         }
     }
+#endif
 
+#ifdef USE_SENSOR
     void InfluxDBWriter::register_sensor_callback(std::vector<EntityBase*> objs, sensor::Sensor* sensor) const
     {
         if (
@@ -213,7 +216,9 @@ namespace esphome::influxdb2
             });
         }
     }
+#endif
 
+#ifdef  USE_TEXT_SENSOR
     void InfluxDBWriter::register_text_sensor_callback(std::vector<EntityBase*> objs,
                                                        text_sensor::TextSensor* text_sensor) const
     {
@@ -227,6 +232,7 @@ namespace esphome::influxdb2
             });
         }
     }
+#endif
 
     void InfluxDBWriter::dump_config()
     {
