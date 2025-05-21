@@ -294,6 +294,6 @@ namespace esphome::influxdb2
         {
             return tags;
         }
-        return tags + ",friendly_name=" + obj->get_name().c_str();
+        return tags + ",friendly_name=" + escape_whitespace(obj->get_name());
     }
 } // namespace influxdb
