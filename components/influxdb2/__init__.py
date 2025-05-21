@@ -1,3 +1,5 @@
+import re
+
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.const import CONF_ID, CONF_PORT
@@ -97,4 +99,5 @@ def to_code(config):
 
 
 def join_tags(config):
-    return ''.join(',{}={}'.format(tag, value) for tag, value in config.items())
+    return ''.join(
+        ',{}={}'.format(re.sub(r'\s', r'\\1', tag), re.sub(r'\s', r'\\1', value)) for tag, value in config.items())

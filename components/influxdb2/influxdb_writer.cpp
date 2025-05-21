@@ -76,17 +76,18 @@ namespace esphome::influxdb2
         this->request_->set_timeout(this->send_timeout);
     }
 
-    void InfluxDBWriter::escape_whitespace(std::string tags)
+    std::string InfluxDBWriter::escape_whitespace(const std::string& tags)
     {
-        for (size_t i = 0; i < tags.length(); ++i)
+        std::string updated_tags = tags;
+        for (size_t i = 0; i < updated_tags.length(); ++i)
         {
-            // Add the escape char "\" to all whitespaces in the tags with an "\ "
-            if (tags[i] == ' ')
+            if (updated_tags[i] == ' ')
             {
-                tags.insert(i, "\\");
-                i++; // Skip the inserted backslash
+                updated_tags.insert(i, "\\");
+                i++;
             }
         }
+        return updated_tags;
     }
 
     std::string headers_to_string(const std::list<http_request::Header>& headers)
@@ -111,13 +112,12 @@ namespace esphome::influxdb2
     }
 
     void InfluxDBWriter::write(std::string measurement,
-                               std::string& tags,
+                               const std::string& tags,
                                const std::string& field_key,
                                const std::string& value,
                                const bool is_string) const
     {
         std::replace(measurement.begin(), measurement.end(), '-', '_');
-        escape_whitespace(tags);
 
         std::list<http_request::Header> headers;
         http_request::Header header;

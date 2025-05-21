@@ -71,7 +71,7 @@ namespace esphome::influxdb2
 
     protected:
         void setup_client();
-        static void escape_whitespace(std::string tags);
+        static std::string escape_whitespace(const std::string& tags);
 #ifdef USE_BINARY_SENSOR
         void register_binary_sensor_callback(std::vector<EntityBase*> objs,
                                              binary_sensor::BinarySensor* binary_sensor) const;
@@ -82,7 +82,7 @@ namespace esphome::influxdb2
 #ifdef USE_TEXT_SENSOR
         void register_text_sensor_callback(std::vector<EntityBase*> objs, text_sensor::TextSensor* text_sensor) const;
 #endif
-        void write(std::string measurement, std::string& tags, const std::string& field_key,
+        void write(std::string measurement, const std::string& tags, const std::string& field_key,
                    const std::string& value,
                    bool is_string) const;
 
