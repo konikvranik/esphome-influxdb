@@ -146,8 +146,8 @@ namespace esphome::influxdb2
 
         constexpr esp_task_wdt_config_t cfg = {
             .timeout_ms = 500,
-            .trigger_panic = false, // Spustí panic reset v případě timeoutu
-            .idle_core_mask = 0 // Ignorování nečinných úloh na všech jádrech
+            .idle_core_mask = 0,
+            .trigger_panic = false
         };
 
         esp_task_wdt_init(&cfg); // Timeout 10 sekund
