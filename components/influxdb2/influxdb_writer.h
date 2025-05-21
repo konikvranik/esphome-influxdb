@@ -21,7 +21,7 @@ namespace esphome::influxdb2
 #ifdef USE_ESP_IDF
                               new http_request::HttpRequestIDF()
 #else
-                              new http_request::HttpRequestArduino();
+                              new http_request::HttpRequestArduino()
 #endif
                           )
         {
