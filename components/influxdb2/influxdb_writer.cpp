@@ -149,10 +149,21 @@ namespace esphome::influxdb2
             sensor_precondition(std::move(objs), sensor)
         )
         {
-            sensor->add_on_state_callback([this, sensor](float state)
+            //////////////////////////
+            [this, sensor]() -> EntityBase*
             {
-                this->on_sensor_update(sensor, sensor->get_object_id(), this->tags, this->field_key, state);
-            });
+                sensor->add_on_state_callback([this, sensor](float state)
+                {
+                    this->on_sensor_update(sensor, sensor->get_object_id(), this->tags, this->field_key, state);
+                });
+                return sensor;
+            };
+
+            ////////////////////////////
+            // sensor->add_on_state_callback([this, sensor](float state)
+            // {
+            //     this->on_sensor_update(sensor, sensor->get_object_id(), this->tags, this->field_key, state);
+            // });
         }
     }
 
