@@ -6,7 +6,11 @@
 #include <utility>
 #include <vector>
 
+#ifdef USE_ESP_IDF
 #include "esphome/components/http_request/http_request_idf.h"
+#else
+#include "esphome/components/http_request/http_request_arduino.h"
+#endif
 
 
 namespace esphome::influxdb2
