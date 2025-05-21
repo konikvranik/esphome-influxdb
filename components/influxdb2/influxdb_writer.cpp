@@ -144,14 +144,13 @@ namespace esphome::influxdb2
         ESP_LOGD("http_request", "Body size: %d", body.size());
         ESP_LOGD("http_request", "Header count: %d", headers.size());
 
-        const esp_task_wdt_config_t* cfg = {
+        const esp_task_wdt_config_t cfg = {
             .timeout_ms = 500,
             .trigger_panic = false, // Spustí panic reset v případě timeoutu
             .idle_core_mask = 0, // Ignorování nečinných úloh na všech jádrech
-            .flags = 0 // Rezervováno, nastavte na 0
         };
 
-        esp_task_wdt_init(cfg); // Timeout 10 sekund
+        esp_task_wdt_init(&cfg); // Timeout 10 sekund
         esp_task_wdt_add(nullptr); // Přidání aktuální úlohy k watchdogu
 
         std::shared_ptr<http_request::HttpContainer> response = this->request_->post(this->service_url, body, headers);
