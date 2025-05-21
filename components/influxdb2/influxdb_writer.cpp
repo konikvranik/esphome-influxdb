@@ -282,27 +282,18 @@ namespace esphome::influxdb2
 #endif
     std::string InfluxDBWriter::update_tags(const EntityBase* obj, const std::string& tags)
     {
-        if (std::empty(tags))
+        if (tags.empty())
         {
-            if (std::empty(escape_whitespace(obj->get_name())))
+            if (obj->get_name().empty())
             {
                 return "";
             }
-            else
-            {
-                return "friendly_name=" + escape_whitespace(obj->get_name());
-            }
+            return "friendly_name=" + escape_whitespace(obj->get_name());
         }
-        else
+        if (obj->get_name().empty() || tags.find("friendly_name=") != std::string::npos)
         {
-            if (std::empty(obj->get_name()))
-            {
-                return tags;
-            }
-            else
-            {
-                return tags + ",friendly_name=" + obj->get_name().c_str();
-            }
+            return tags;
         }
+        return tags + ",friendly_name=" + obj->get_name().c_str();
     }
 } // namespace influxdb
