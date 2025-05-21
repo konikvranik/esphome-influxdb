@@ -121,7 +121,7 @@ namespace esphome {
         void InfluxDBWriter::on_sensor_update(sensor::Sensor *obj,
                                               std::string measurement, std::string tags, std::string field_key,
                                               float state) {
-            if (!isnan(state)) {
+            if (!std::isnan(state)) {
                 std::stringstream value;
                 value << std::fixed << std::setprecision(this->precision) << state;
                 write(measurement, tags, field_key, value.str(), false);
