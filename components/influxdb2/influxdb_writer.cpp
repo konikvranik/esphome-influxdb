@@ -95,8 +95,7 @@ namespace esphome::influxdb2
                 i++; // Skip the inserted backslash
             }
         }
-        std::string line =
-            measurement + tags + " " + field_key + "=" + (is_string ? ("\"" + value + "\"") : value);
+        std::string line = measurement + tags + " " + field_key + "=" + (is_string ? ("\"" + value + "\"") : value);
 
         std::list<http_request::Header> headers;
         http_request::Header header;
@@ -110,9 +109,9 @@ namespace esphome::influxdb2
             headers.push_back(header);
         }
 
-        this->request_->post(this->service_url, line, headers);
-
         ESP_LOGD(TAG, "InfluxDB packet: %s", line.c_str());
+        return;
+        this->request_->post(this->service_url, line, headers);
     }
 
     bool sensor_precondition(std::vector<EntityBase*> objs, EntityBase* sensor)
@@ -175,7 +174,6 @@ namespace esphome::influxdb2
                                           std::string measurement, std::string tags, const std::string& field_key,
                                           bool state) const
     {
-        return;
         write(std::move(measurement), std::move(tags), field_key, state ? "t" : "f", false);
     }
 #endif
@@ -185,7 +183,6 @@ namespace esphome::influxdb2
                                           std::string measurement, std::string tags, const std::string& field_key,
                                           float state) const
     {
-        return;
 #ifdef USE_ESP_IDF
         if (!std::isnan(state))
 #else
@@ -204,7 +201,6 @@ namespace esphome::influxdb2
                                           std::string measurement, std::string tags, const std::string& field_key,
                                           const std::string& state) const
     {
-        return;
         write(std::move(measurement), std::move(tags), field_key, state, true);
     }
 #endif
