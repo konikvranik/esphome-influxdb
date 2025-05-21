@@ -175,6 +175,7 @@ namespace esphome::influxdb2
                                           std::string measurement, std::string tags, const std::string& field_key,
                                           bool state) const
     {
+        return;
         write(std::move(measurement), std::move(tags), field_key, state ? "t" : "f", false);
     }
 #endif
@@ -184,6 +185,7 @@ namespace esphome::influxdb2
                                           std::string measurement, std::string tags, const std::string& field_key,
                                           float state) const
     {
+        return;
 #ifdef USE_ESP_IDF
         if (!std::isnan(state))
 #else
@@ -202,6 +204,7 @@ namespace esphome::influxdb2
                                           std::string measurement, std::string tags, const std::string& field_key,
                                           const std::string& state) const
     {
+        return;
         write(std::move(measurement), std::move(tags), field_key, state, true);
     }
 #endif
