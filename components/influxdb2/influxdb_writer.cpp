@@ -26,7 +26,7 @@ namespace esphome::influxdb2
 
         setup_client();
 
-        if (publish_all && false)
+        if (publish_all)
         {
 #ifdef USE_BINARY_SENSOR
             for (auto* obj : App.get_binary_sensors())
@@ -115,18 +115,23 @@ namespace esphome::influxdb2
         ESP_LOGD(TAG, "InfluxDB packet: %s", line.c_str());
     }
 
+    bool sensor_precondition(std::vector<EntityBase*> objs, EntityBase* sensor)
+    {
+        return !sensor->is_internal()
+            &&
+            std::none_of(objs.begin(), objs.end(), [&sensor](const EntityBase* o) { return o == sensor; });
+    }
+
     void InfluxDBWriter::register_binary_sensor_callback(std::vector<EntityBase*> objs,
                                                          binary_sensor::BinarySensor* binary_sensor) const
     {
         if (
-            !binary_sensor->is_internal()
-            &&
-            std::none_of(objs.begin(), objs.end(), [&binary_sensor](const EntityBase* o) { return o == binary_sensor; })
+            sensor_precondition(std::move(objs), binary_sensor)
         )
         {
             binary_sensor->add_on_state_callback([this, binary_sensor](bool state)
             {
-                this->on_sensor_update(binary_sensor, binary_sensor->get_object_id(), tags, field_key, state);
+                this->on_sensor_update(binary_sensor->get_object_id(), tags, field_key, state);
             });
         }
     }
@@ -134,14 +139,12 @@ namespace esphome::influxdb2
     void InfluxDBWriter::register_sensor_callback(std::vector<EntityBase*> objs, sensor::Sensor* sensor) const
     {
         if (
-            !sensor->is_internal()
-            &&
-            std::none_of(objs.begin(), objs.end(), [&sensor](const EntityBase* o) { return o == sensor; })
+            sensor_precondition(std::move(objs), sensor)
         )
         {
             sensor->add_on_state_callback([this, sensor](float state)
             {
-                this->on_sensor_update(sensor, sensor->get_object_id(), tags, field_key, state);
+                this->on_sensor_update(sensor->get_object_id(), tags, field_key, state);
             });
         }
     }
@@ -150,14 +153,12 @@ namespace esphome::influxdb2
                                                        text_sensor::TextSensor* text_sensor) const
     {
         if (
-            !text_sensor->is_internal()
-            &&
-            std::none_of(objs.begin(), objs.end(), [&text_sensor](const EntityBase* o) { return o == text_sensor; })
+            sensor_precondition(std::move(objs), text_sensor)
         )
         {
             text_sensor->add_on_state_callback([this, text_sensor](const std::string& state)
             {
-                this->on_sensor_update(text_sensor, text_sensor->get_object_id(), tags, field_key, state);
+                this->on_sensor_update(text_sensor->get_object_id(), tags, field_key, state);
             });
         }
     }
@@ -170,18 +171,18 @@ namespace esphome::influxdb2
     }
 
 #ifdef USE_BINARY_SENSOR
-    void InfluxDBWriter::on_sensor_update(binary_sensor::BinarySensor* obj,
-                                          std::string measurement, std::string tags, const std::string& field_key,
-                                          bool state) const
+    void InfluxDBWriter::on_sensor_update(
+        std::string measurement, std::string tags, const std::string& field_key,
+        bool state) const
     {
         write(std::move(measurement), std::move(tags), field_key, state ? "t" : "f", false);
     }
 #endif
 
 #ifdef USE_SENSOR
-    void InfluxDBWriter::on_sensor_update(sensor::Sensor* obj,
-                                          std::string measurement, std::string tags, const std::string& field_key,
-                                          float state) const
+    void InfluxDBWriter::on_sensor_update(
+        std::string measurement, std::string tags, const std::string& field_key,
+        float state) const
     {
 #ifdef USE_ESP_IDF
         if (!std::isnan(state))
@@ -198,9 +199,9 @@ namespace esphome::influxdb2
 #endif
 
 #ifdef USE_TEXT_SENSOR
-    void InfluxDBWriter::on_sensor_update(text_sensor::TextSensor* obj,
-                                          std::string measurement, std::string tags, const std::string& field_key,
-                                          const std::string& state) const
+    void InfluxDBWriter::on_sensor_update(
+        std::string measurement, std::string tags, const std::string& field_key,
+        const std::string& state) const
     {
         write(std::move(measurement), std::move(tags), field_key, state, true);
     }
