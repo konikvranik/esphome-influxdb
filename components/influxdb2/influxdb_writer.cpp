@@ -109,8 +109,8 @@ namespace esphome::influxdb2
             headers.push_back(header);
         }
 
+        ESP_LOGD(TAG, "InfluxDB URL: %s", this->service_url);
         ESP_LOGD(TAG, "InfluxDB packet: %s", line.c_str());
-        return;
         this->request_->post(this->service_url, line, headers);
     }
 
