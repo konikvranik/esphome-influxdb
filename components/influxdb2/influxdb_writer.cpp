@@ -268,6 +268,24 @@ namespace esphome::influxdb2
     }
 #endif
 
+#ifdef USE_SWITCH
+    void InfluxDBWriter::on_sensor_update(switch_::Switch* obj, const std::string& measurement, const std::string& tags,
+                                          const std::string& field_key, float state) const
+    {
+#ifdef USE_ESP_IDF
+        if (!std::isnan(state))
+#else
+        if (!isnan(state))
+#endif
+        {
+            std::stringstream value;
+            value << std::fixed << std::setprecision(this->precision) << state;
+            ESP_LOGD(TAG, "Updating sensor: %s", field_key.c_str());
+            write(measurement, update_tags(obj, tags), field_key, value.str(), false);
+        }
+    }
+#endif
+
 #ifdef USE_TEXT_SENSOR
 
     void InfluxDBWriter::on_sensor_update(text_sensor::TextSensor* obj, const std::string& measurement,

@@ -46,6 +46,10 @@ namespace esphome::influxdb2
         void on_sensor_update(sensor::Sensor* obj, const std::string& measurement,
                               const std::string& tags, const std::string& field_key, float state) const;
 #endif
+#ifdef USE_SWITCH
+            void on_sensor_update(switch_::Switch* obj, const std::string& measurement,
+                                  const std::string& tags, const std::string& field_key, float state) const;
+#endif
 #ifdef USE_TEXT_SENSOR
         void on_sensor_update(text_sensor::TextSensor* obj, const std::string& measurement,
                               const std::string& tags, const std::string& field_key, const std::string& state) const;
@@ -79,6 +83,9 @@ namespace esphome::influxdb2
 #endif
 #ifdef USE_SENSOR
         void register_sensor_callback(std::vector<EntityBase*> objs, sensor::Sensor* sensor) const;
+#endif
+#ifdef USE_SWITCH
+            void register_swith_callback(std::vector<EntityBase*> objs, switch_::Switch* sensor) const;
 #endif
 #ifdef USE_TEXT_SENSOR
         void register_text_sensor_callback(std::vector<EntityBase*> objs, text_sensor::TextSensor* text_sensor) const;
