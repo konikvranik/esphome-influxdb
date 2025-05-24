@@ -48,7 +48,7 @@ namespace esphome::influxdb2
 #endif
 #ifdef USE_SWITCH
             void on_sensor_update(switch_::Switch* obj, const std::string& measurement,
-                                  const std::string& tags, const std::string& field_key, float state) const;
+                                  const std::string& tags, const std::string& field_key, std::string& state) const;
 #endif
 #ifdef USE_TEXT_SENSOR
         void on_sensor_update(text_sensor::TextSensor* obj, const std::string& measurement,

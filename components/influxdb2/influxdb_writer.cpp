@@ -270,7 +270,7 @@ namespace esphome::influxdb2
 
 #ifdef USE_SWITCH
     void InfluxDBWriter::on_sensor_update(switch_::Switch* obj, const std::string& measurement, const std::string& tags,
-                                          const std::string& field_key, float state) const
+                                          const std::string& field_key, std::string& state) const
     {
 #ifdef USE_ESP_IDF
         if (!std::isnan(state))
