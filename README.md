@@ -1,5 +1,7 @@
 # InfluxDB2 custom component for ESPHome
+
 Changes from Jepsson/esphome-influxdb:
+
 - Changed to InfluxDB2 API
 - Made usable as external component
 - Remove "device" as it can be replaced by a tag
@@ -8,6 +10,7 @@ Changes from Jepsson/esphome-influxdb:
 - field_key can be set manually
 
 ## Installation
+
 Add this repository as an submodule in your esphome custom_compontents;
 `git clone https://github.com/konikvranik/esphome-influxdb custom_components/influxdb2`
 
@@ -23,10 +26,10 @@ external_components:
     components: [ influxdb2 ]
 
 influxdb2:
-  host: "influxdb-host"
-  orgid: "influx_org"
-  token: "Token XXX"
-  bucket: "influx_bucket"
+  host: influxdb_host
+  orgid: influx_org
+  token: Token influx_token
+  bucket: influx_bucket
   https: false
   precision: 2
   tags: # Optional
@@ -36,7 +39,8 @@ influxdb2:
     meter_id:
       ignore: True
     ams_temperature:
-      measurement: 'temperature'
+      measurement: temperature
+      measurement_unit: ˚C
       tags:
         sensortype: MySensor
 ```
@@ -50,14 +54,18 @@ influxdb2:
 * **bucket** (Required, string): Name of influxdb bucket.
 * **https** (Optional, bool, default: false): Uses https and ignores the port setting.
 * **precision** (Optional, int, default: 6): Number of decimal places.
-* **send_timeout** (Optional, time, default: "500ms"): Time to wait before sending UDP packets which have not been filled to max size.
-* **publish_all** (Optional, boolean, default: True): If true, publish updates from all sensors unless explicitly ignored in per sensor configuration. If false, only publish updates from sensors explicitly configured.
-* **tags** (Optional, mapping, default 'node: <esphome.name>'): Mapping of tag keys and values. 
-* **sensors** (Optional, mapping, default: {}): Per sensor configuration. Keys are sensor IDs. All types of sensors are included in this mapping, there is no distinction between float, binary and text sensors.
+* **send_timeout** (Optional, time, default: "500ms"): Time to wait before sending UDP packets which have not been
+  filled to max size.
+* **publish_all** (Optional, boolean, default: True): If true, publish updates from all sensors unless explicitly
+  ignored in per sensor configuration. If false, only publish updates from sensors explicitly configured.
+* **tags** (Optional, mapping, default 'node: <esphome.name>'): Mapping of tag keys and values.
+* **sensors** (Optional, mapping, default: {}): Per sensor configuration. Keys are sensor IDs. All types of sensors are
+  included in this mapping, there is no distinction between float, binary and text sensors.
 
 #### Sensor configuration variables
 
 * **ignore** (Optional, boolean, default: False): Whether or not to include updates for this sensor.
-* **measurement** (Optional, string): Name of measurements with update from this sensor. Defaults to the sanitized name of the sensor.
+* **measurement** (Optional, string): Name of measurements with update from this sensor. Defaults to the sanitized name
+  of the sensor.
 * **tags** (Optional, mapping, default: {}): Additional tags added for this sensor.
 * **field_key** (Optional, string, default: value): Set field_key
