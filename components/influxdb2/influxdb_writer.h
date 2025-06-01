@@ -48,7 +48,7 @@ namespace esphome::influxdb2
 #endif
 #ifdef USE_LIGHT
             void on_light_update(light::LightState* obj, const std::string& measurement,
-                                  const std::string& tags, const std::string& field_key, float state) const;
+                                 const std::string& tags, const std::string& field_key) const;
 #endif
 #ifdef USE_SENSOR
         void on_sensor_update(sensor::Sensor* obj, const std::string& measurement,

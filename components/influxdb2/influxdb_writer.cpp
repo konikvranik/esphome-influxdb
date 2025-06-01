@@ -240,9 +240,7 @@ namespace esphome::influxdb2
         {
             light->add_new_remote_values_callback([this, light]()
             {
-                float state;
-                light->current_values_as_brightness(&state);
-                this->on_light_update(light, light->get_object_id(), this->tags, this->field_key, state);
+                this->on_light_update(light, light->get_object_id(), this->tags, this->field_key);
             });
         }
     }
@@ -308,8 +306,10 @@ namespace esphome::influxdb2
 #ifdef USE_LIGHT
     void InfluxDBWriter::on_light_update(light::LightState* obj, const std::string& measurement,
                                          const std::string& tags,
-                                         const std::string& field_key, float state) const
+                                         const std::string& field_key) const
     {
+        float state;
+        obj->current_values_as_brightness(&state);
         std::stringstream value;
 #ifdef USE_ESP_IDF
         if (!std::isnan(state))
@@ -325,7 +325,6 @@ namespace esphome::influxdb2
         }
         ESP_LOGD(TAG, "Updating light: %s", field_key.c_str());
         write(measurement, update_tags(obj, tags), field_key, value.str(), false);
-
     }
 #endif
 
