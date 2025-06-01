@@ -238,7 +238,7 @@ namespace esphome::influxdb2
             sensor_precondition(std::move(objs), light)
         )
         {
-            light->add_new_remote_values_callback([this, light]()
+            light->add_new_target_state_reached_callback([this, light]()
             {
                 this->on_light_update(light, light->get_object_id(), this->tags, this->field_key);
             });
