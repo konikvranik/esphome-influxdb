@@ -2,7 +2,9 @@ import re
 
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.const import CONF_ID, CONF_PORT, CONF_BINARY_SENSORS, CONF_SWITCHES, CONF_LIGHT, CONF_TEXT_SENSORS
+from esphome.components.binary_sensor import BINARY_SENSOR_SCHEMA
+from esphome.const import CONF_ID, CONF_PORT, CONF_BINARY_SENSORS, CONF_SWITCHES, CONF_LIGHT, CONF_TEXT_SENSORS, \
+    CONF_SENSORS
 from esphome.core import CORE
 from esphome.core import coroutine_with_priority
 
@@ -23,7 +25,6 @@ CONF_SEND_TIMEOUT = 'send_timeout'
 CONF_TAGS = 'tags'
 # CONF_DEVICE = 'device'
 CONF_PUBLISH_ALL = 'publish_all'
-CONF_SENSORS = 'sensors'
 CONF_IGNORE = 'ignore'
 CONF_MEASUREMENT = 'measurement'
 CONF_HTTPS = 'https'
@@ -56,6 +57,7 @@ CONFIG_SCHEMA = cv.Schema({
         cv.string: cv.string
     }),
     cv.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
+    cv.Optional(CONF_BINARY_SENSORS, default={}): SENSOR_SCHEMA,
     cv.Optional(CONF_HTTPS, default=False): cv.boolean,
     cv.Optional(CONF_PRECISION, default=8): cv.int_,
     cv.Optional(CONF_FIELD_KEY, default='value'): cv.string_strict,
@@ -89,7 +91,7 @@ def to_code(config):
                 measurement = f"{sensor_id}->get_object_id()"
 
             cg.add(var.add_setup_callback(cg.RawExpression(
-                f"[]() -> EntityBase* {{ {sensor_id}->add_on_state_callback([](float state) {{ {config[CONF_ID]}->on_sensor_update({sensor_id}, {measurement}, \"{tags}\", \"{field_key}\", state); }}); return {sensor_id}; }}")))
+                    f"[]() -> EntityBase* {{ {sensor_id}->add_on_state_callback([](float state) {{ {config[CONF_ID]}->on_sensor_update({sensor_id}, {measurement}, \"{tags}\", \"{field_key}\", state); }}); return {sensor_id}; }}")))
         else:
             cg.add(var.add_setup_callback(cg.RawExpression(
                 f"[]() -> EntityBase* {{ return {sensor_id}; }}")))

@@ -36,6 +36,18 @@ namespace esphome::influxdb2
                 register_binary_sensor_callback(objs, obj);
             }
 #endif
+#ifdef USE_SWITCH
+            for (auto* obj : App.get_switches())
+            {
+                register_swith_callback(objs, obj);
+            }
+#endif
+#ifdef USE_LIGHT
+            for (auto* obj : App.get_lights())
+            {
+                register_light_callback(objs, obj);
+            }
+#endif
 #ifdef USE_SENSOR
 
             for (auto* obj : App.get_sensors())

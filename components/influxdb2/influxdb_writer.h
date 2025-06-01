@@ -91,6 +91,9 @@ namespace esphome::influxdb2
 #ifdef USE_SWITCH
         void register_swith_callback(std::vector<EntityBase*> objs, switch_::Switch* sensor) const;
 #endif
+#ifdef USE_LIGHT
+            void register_light_callback(std::vector<EntityBase*> objs, light::LightState* sensor) const;
+#endif
 #ifdef USE_TEXT_SENSOR
         void register_text_sensor_callback(std::vector<EntityBase*> objs, text_sensor::TextSensor* text_sensor) const;
 #endif
