@@ -239,9 +239,9 @@ namespace esphome::influxdb2
         {
             light->add_new_remote_values_callback([this, light]()
             {
-                float* state = nullptr;
-                light->current_values_as_brightness(state);
-                this->on_sensor_update(light, light->get_object_id(), this->tags, this->field_key, *state);
+                float state ;
+                light->current_values_as_brightness(&state);
+                this->on_sensor_update(light, light->get_object_id(), this->tags, this->field_key, state);
             });
         }
     }
