@@ -39,7 +39,7 @@ namespace esphome::influxdb2
 #ifdef USE_SWITCH
             for (auto* obj : App.get_switches())
             {
-                register_swith_callback(objs, obj);
+                register_switch_callback(objs, obj);
             }
 #endif
 #ifdef USE_LIGHT
@@ -215,6 +215,38 @@ namespace esphome::influxdb2
     }
 #endif
 
+#ifdef USE_SWITCH
+    void InfluxDBWriter::register_switch_callback(std::vector<EntityBase*> objs, switch_::Switch* s) const
+    {
+        if (
+            sensor_precondition(std::move(objs), s)
+        )
+        {
+            s->add_on_state_callback([this, s](bool state)
+            {
+                this->on_sensor_update(s, s->get_object_id(), this->tags, this->field_key, state);
+            });
+        }
+    }
+#endif
+
+#ifdef USE_LIGHT
+    void InfluxDBWriter::register_light_callback(std::vector<EntityBase*> objs, light::LightState* light) const
+    {
+        if (
+            sensor_precondition(std::move(objs), light)
+        )
+        {
+            light->add_new_remote_values_callback([this, light]()
+            {
+                float* state = nullptr;
+                light->current_values_as_brightness(state);
+                this->on_sensor_update(light, light->get_object_id(), this->tags, this->field_key, *state);
+            });
+        }
+    }
+#endif
+
 #ifdef USE_SENSOR
     void InfluxDBWriter::register_sensor_callback(std::vector<EntityBase*> objs, sensor::Sensor* sensor) const
     {
@@ -272,8 +304,9 @@ namespace esphome::influxdb2
 #endif
 
 #ifdef USE_LIGHT
-    void InfluxDBWriter::on_sensor_update(light::LightState* obj, const std::string& measurement, const std::string& tags,
-                                          const std::string& field_key, bool state) const
+    void InfluxDBWriter::on_sensor_update(light::LightState* obj, const std::string& measurement,
+                                          const std::string& tags,
+                                          const std::string& field_key, float state) const
     {
         ESP_LOGD(TAG, "Updating light: %s", field_key.c_str());
         write(measurement, update_tags(obj, tags), field_key, state ? "t" : "f", false);
