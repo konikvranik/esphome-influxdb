@@ -239,7 +239,7 @@ namespace esphome::influxdb2
         {
             light->add_new_remote_values_callback([this, light]()
             {
-                float state ;
+                float state;
                 light->current_values_as_brightness(&state);
                 this->on_sensor_update(light, light->get_object_id(), this->tags, this->field_key, state);
             });
@@ -308,8 +308,17 @@ namespace esphome::influxdb2
                                           const std::string& tags,
                                           const std::string& field_key, float state) const
     {
-        ESP_LOGD(TAG, "Updating light: %s", field_key.c_str());
-        write(measurement, update_tags(obj, tags), field_key, state ? "t" : "f", false);
+#ifdef USE_ESP_IDF
+        if (!std::isnan(state))
+#else
+        if (!isnan(state))
+#endif
+        {
+            std::stringstream value;
+            value << std::fixed << std::setprecision(this->precision) << state;
+            ESP_LOGD(TAG, "Updating light: %s", field_key.c_str());
+            write(measurement, update_tags(obj, tags), field_key, value.str(), false);
+        }
     }
 #endif
 
