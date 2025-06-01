@@ -208,8 +208,9 @@ namespace esphome::influxdb2
         {
             binary_sensor->add_on_state_callback([this, binary_sensor](bool state)
             {
-                this->on_binary_sensor_update(binary_sensor, binary_sensor->get_object_id(), this->tags, this->field_key,
-                                       state);
+                this->on_binary_sensor_update(binary_sensor, binary_sensor->get_object_id(), this->tags,
+                                              this->field_key,
+                                              state);
             });
         }
     }
@@ -287,7 +288,8 @@ namespace esphome::influxdb2
 
 #ifdef USE_BINARY_SENSOR
     void InfluxDBWriter::on_binary_sensor_update(binary_sensor::BinarySensor* obj, const std::string& measurement,
-                                          const std::string& tags, const std::string& field_key, bool state) const
+                                                 const std::string& tags, const std::string& field_key,
+                                                 bool state) const
     {
         ESP_LOGD(TAG, "Updating binary sensor: %s", field_key.c_str());
         write(measurement, update_tags(obj, tags), field_key, state ? "t" : "f", false);
@@ -305,20 +307,25 @@ namespace esphome::influxdb2
 
 #ifdef USE_LIGHT
     void InfluxDBWriter::on_light_update(light::LightState* obj, const std::string& measurement,
-                                          const std::string& tags,
-                                          const std::string& field_key, float state) const
+                                         const std::string& tags,
+                                         const std::string& field_key, float state) const
     {
+        std::stringstream value;
 #ifdef USE_ESP_IDF
         if (!std::isnan(state))
 #else
         if (!isnan(state))
 #endif
         {
-            std::stringstream value;
             value << std::fixed << std::setprecision(this->precision) << state;
-            ESP_LOGD(TAG, "Updating light: %s", field_key.c_str());
-            write(measurement, update_tags(obj, tags), field_key, value.str(), false);
         }
+        else
+        {
+            value << std::fixed << std::setprecision(this->precision) << obj->get_component_state();
+        }
+        ESP_LOGD(TAG, "Updating light: %s", field_key.c_str());
+        write(measurement, update_tags(obj, tags), field_key, value.str(), false);
+
     }
 #endif
 
