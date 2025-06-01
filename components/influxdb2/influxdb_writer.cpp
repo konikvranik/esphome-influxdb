@@ -208,7 +208,7 @@ namespace esphome::influxdb2
         {
             binary_sensor->add_on_state_callback([this, binary_sensor](bool state)
             {
-                this->on_sensor_update(binary_sensor, binary_sensor->get_object_id(), this->tags, this->field_key,
+                this->on_binary_sensor_update(binary_sensor, binary_sensor->get_object_id(), this->tags, this->field_key,
                                        state);
             });
         }
@@ -224,7 +224,7 @@ namespace esphome::influxdb2
         {
             s->add_on_state_callback([this, s](bool state)
             {
-                this->on_sensor_update(s, s->get_object_id(), this->tags, this->field_key, state);
+                this->on_switch_update(s, s->get_object_id(), this->tags, this->field_key, state);
             });
         }
     }
@@ -241,7 +241,7 @@ namespace esphome::influxdb2
             {
                 float state;
                 light->current_values_as_brightness(&state);
-                this->on_sensor_update(light, light->get_object_id(), this->tags, this->field_key, state);
+                this->on_light_update(light, light->get_object_id(), this->tags, this->field_key, state);
             });
         }
     }
@@ -286,7 +286,7 @@ namespace esphome::influxdb2
     }
 
 #ifdef USE_BINARY_SENSOR
-    void InfluxDBWriter::on_sensor_update(binary_sensor::BinarySensor* obj, const std::string& measurement,
+    void InfluxDBWriter::on_binary_sensor_update(binary_sensor::BinarySensor* obj, const std::string& measurement,
                                           const std::string& tags, const std::string& field_key, bool state) const
     {
         ESP_LOGD(TAG, "Updating binary sensor: %s", field_key.c_str());
@@ -295,7 +295,7 @@ namespace esphome::influxdb2
 #endif
 
 #ifdef USE_SWITCH
-    void InfluxDBWriter::on_sensor_update(switch_::Switch* obj, const std::string& measurement, const std::string& tags,
+    void InfluxDBWriter::on_switch_update(switch_::Switch* obj, const std::string& measurement, const std::string& tags,
                                           const std::string& field_key, bool state) const
     {
         ESP_LOGD(TAG, "Updating switch: %s", field_key.c_str());
@@ -304,7 +304,7 @@ namespace esphome::influxdb2
 #endif
 
 #ifdef USE_LIGHT
-    void InfluxDBWriter::on_sensor_update(light::LightState* obj, const std::string& measurement,
+    void InfluxDBWriter::on_light_update(light::LightState* obj, const std::string& measurement,
                                           const std::string& tags,
                                           const std::string& field_key, float state) const
     {
