@@ -2,9 +2,7 @@ import re
 
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.components.binary_sensor import BINARY_SENSOR_SCHEMA
-from esphome.const import CONF_ID, CONF_PORT, CONF_BINARY_SENSORS, CONF_SWITCHES, CONF_LIGHT, CONF_TEXT_SENSORS, \
-    CONF_SENSORS
+from esphome.const import CONF_ID, CONF_PORT, CONF_SENSORS
 from esphome.core import CORE
 from esphome.core import coroutine_with_priority
 
@@ -57,7 +55,6 @@ CONFIG_SCHEMA = cv.Schema({
         cv.string: cv.string
     }),
     cv.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
-    cv.Optional(CONF_BINARY_SENSORS, default={}): SENSOR_SCHEMA,
     cv.Optional(CONF_HTTPS, default=False): cv.boolean,
     cv.Optional(CONF_PRECISION, default=8): cv.int_,
     cv.Optional(CONF_FIELD_KEY, default='value'): cv.string_strict,
@@ -81,7 +78,7 @@ def to_code(config):
     cg.add(var.set_tags(join_tags(config[CONF_TAGS])))
     cg.add(var.set_precision(config[CONF_PRECISION]))
 
-    for sensor_id, sensor_config in config[CONF_SENSORS]:
+    for sensor_id, sensor_config in config[CONF_SENSORS].items():
         if not sensor_config[CONF_IGNORE]:
             tags = join_tags({**config[CONF_TAGS], **sensor_config[CONF_TAGS]})
             field_key = sensor_config[CONF_FIELD_KEY]
