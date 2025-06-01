@@ -308,20 +308,27 @@ namespace esphome::influxdb2
                                          const std::string& tags,
                                          const std::string& field_key) const
     {
-        float state;
-        obj->current_values_as_brightness(&state);
         std::stringstream value;
-#ifdef USE_ESP_IDF
-        if (!std::isnan(state))
-#else
-        if (!isnan(state))
-#endif
+        if (obj->get_component_state())
         {
-            value << std::fixed << std::setprecision(this->precision) << state;
+            float brightness;
+            obj->current_values_as_brightness(&brightness);
+#ifdef USE_ESP_IDF
+            if (!std::isnan(brightness))
+#else
+            if (!isnan(state))
+#endif
+            {
+                value << std::fixed << std::setprecision(this->precision) << brightness;
+            }
+            else
+            {
+                value << std::fixed << std::setprecision(this->precision) << 1;
+            }
         }
         else
         {
-            value << std::fixed << std::setprecision(this->precision) << obj->get_component_state();
+            value << std::fixed << std::setprecision(this->precision) << 0;
         }
         ESP_LOGD(TAG, "Updating light: %s", field_key.c_str());
         write(measurement, update_tags(obj, tags), field_key, value.str(), false);
