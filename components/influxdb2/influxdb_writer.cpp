@@ -309,7 +309,9 @@ namespace esphome::influxdb2
                                          const std::string& field_key) const
     {
         std::stringstream value;
-        if (!obj->get_component_state())
+        bool state;
+        obj->current_values_as_binary(&state);
+        if (state)
         {
             float brightness;
             obj->current_values_as_brightness(&brightness);
