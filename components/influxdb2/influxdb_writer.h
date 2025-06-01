@@ -39,16 +39,17 @@ namespace esphome::influxdb2
         void dump_config() override;
 #ifdef USE_BINARY_SENSOR
         void on_binary_sensor_update(binary_sensor::BinarySensor* obj,
-                              const std::string& measurement, const std::string& tags, const std::string& field_key,
-                              bool state) const;
+                                     const std::string& measurement, const std::string& tags,
+                                     const std::string& field_key,
+                                     bool state) const;
 #endif
 #ifdef USE_SWITCH
-            void on_switch_update(switch_::Switch* obj, const std::string& measurement,
-                                  const std::string& tags, const std::string& field_key, bool state) const;
+        void on_switch_update(switch_::Switch* obj, const std::string& measurement,
+                              const std::string& tags, const std::string& field_key, bool state) const;
 #endif
 #ifdef USE_LIGHT
-            void on_light_update(light::LightState* obj, const std::string& measurement,
-                                 const std::string& tags, const std::string& field_key) const;
+        void on_light_update(light::LightState* obj, const std::string& measurement,
+                             const std::string& tags, const std::string& field_key) const;
 #endif
 #ifdef USE_SENSOR
         void on_sensor_update(sensor::Sensor* obj, const std::string& measurement,
@@ -92,7 +93,7 @@ namespace esphome::influxdb2
         void register_switch_callback(std::vector<EntityBase*> objs, switch_::Switch* sensor) const;
 #endif
 #ifdef USE_LIGHT
-            void register_light_callback(std::vector<EntityBase*> objs, light::LightState* sensor) const;
+        void register_light_callback(std::vector<EntityBase*> objs, light::LightState* sensor) const;
 #endif
 #ifdef USE_TEXT_SENSOR
         void register_text_sensor_callback(std::vector<EntityBase*> objs, text_sensor::TextSensor* text_sensor) const;
