@@ -7,7 +7,7 @@ from esphome.core import CORE
 from esphome.core import coroutine_with_priority
 
 DEPENDENCIES = ['network']
-AUTO_LOAD = ['http_request']
+AUTO_LOAD = ['network']
 
 influxdb_ns = cg.esphome_ns.namespace('influxdb2')
 
@@ -25,7 +25,6 @@ CONF_TAGS = 'tags'
 CONF_PUBLISH_ALL = 'publish_all'
 CONF_IGNORE = 'ignore'
 CONF_MEASUREMENT = 'measurement'
-CONF_HTTPS = 'https'
 CONF_PRECISION = 'precision'
 CONF_FIELD_KEY = 'field_key'
 
@@ -55,7 +54,6 @@ CONFIG_SCHEMA = cv.Schema({
         cv.string: cv.string
     }),
     cv.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
-    cv.Optional(CONF_HTTPS, default=False): cv.boolean,
     cv.Optional(CONF_PRECISION, default=8): cv.int_,
     cv.Optional(CONF_FIELD_KEY, default='value'): cv.string_strict,
 }).extend(cv.COMPONENT_SCHEMA)
@@ -73,7 +71,6 @@ def to_code(config):
     cg.add(var.set_bucket(config[CONF_BUCKET]))
     cg.add(var.set_send_timeout(config[CONF_SEND_TIMEOUT]))
     cg.add(var.set_publish_all(config[CONF_PUBLISH_ALL]))
-    cg.add(var.set_https(config[CONF_HTTPS]))
     cg.add(var.set_field_key(config[CONF_FIELD_KEY]))
     cg.add(var.set_tags(join_tags(config[CONF_TAGS])))
     cg.add(var.set_precision(config[CONF_PRECISION]))

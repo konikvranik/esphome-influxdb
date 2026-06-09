@@ -3,8 +3,7 @@
 #include "esphome/core/log.h"
 #include <algorithm>
 #include <string>
-#include <iomanip>
-#include <sstream>
+#include "esphome/core/helpers.h"
 #include <utility>
 
 #ifdef USE_LOGGER
@@ -71,21 +70,7 @@ namespace esphome::influxdb2
 
     void InfluxDBWriter::setup_client()
     {
-        if (this->https)
-        {
-            this->service_url = "https";
-        }
-        else
-        {
-            this->service_url = "http";
-        }
-        this->service_url = this->service_url + "://" + this->host + ":" + to_string(this->port) +
-            "/api/v2/write?org=" + this->org_id + "&bucket=" + this->bucket + "&precision=ns";
-
-        this->request_->setup();
-
-        this->request_->set_useragent("ESPHome InfluxDB Bot");
-        this->request_->set_timeout(this->send_timeout);
+        ESP_LOGCONFIG(TAG, "InfluxDB client configured for %s:%u", host.c_str(), port);
     }
 
     std::string InfluxDBWriter::escape_whitespace(const std::string& tags)
@@ -102,27 +87,6 @@ namespace esphome::influxdb2
         return updated_tags;
     }
 
-    std::string headers_to_string(const std::vector<http_request::Header>& headers)
-    {
-        std::ostringstream oss;
-        oss << "[";
-        bool first = true;
-
-        for (const auto& header : headers)
-        {
-            if (!first)
-            {
-                oss << ", ";
-            }
-            first = false;
-
-            oss << "{" << header.name << ": " << header.value << "}";
-        }
-
-        oss << "]";
-        return oss.str();
-    }
-
     void InfluxDBWriter::write(std::string measurement,
                                const std::string& tags,
                                const std::string& field_key,
@@ -131,64 +95,83 @@ namespace esphome::influxdb2
     {
         std::replace(measurement.begin(), measurement.end(), '-', '_');
 
-        std::vector<http_request::Header> headers;
-        http_request::Header header;
-        header.name = "Content-Type";
-        header.value = "text/plain";
-        headers.push_back(header);
-        if ((!this->token.empty()))
-        {
-            header.name = "Authorization";
-            header.value = this->token;
-            headers.push_back(header);
-        }
-
         std::string body = measurement + tags + " " + field_key + "=" + (is_string ? ("\"" + value + "\"") : value);
 
         ESP_LOGV(TAG, "Measurement: %s", measurement.c_str());
         ESP_LOGV(TAG, "Tags: %s", tags.c_str());
         ESP_LOGV(TAG, "Field key: %s", field_key.c_str());
         ESP_LOGV(TAG, "Value: %s", value.c_str());
-
-        ESP_LOGD(TAG, "InfluxDB URL: %s", this->service_url.c_str());
-        ESP_LOGD(TAG, "InfluxDB headers: %s", headers_to_string(headers).c_str());
         ESP_LOGD(TAG, "InfluxDB body: %s", body.c_str());
-        ESP_LOGV(TAG, "Body size: %lu", body.size());
-        ESP_LOGV(TAG, "Header count: %lu", headers.size());
 
+        // Build URL path on stack
+        char url_path[256];
+        snprintf(url_path, sizeof(url_path),
+                 "/api/v2/write?org=%s&bucket=%s&precision=ns",
+                 org_id.c_str(), bucket.c_str());
 
-        if (this->request_ == nullptr)
+        WiFiClient client;
+        client.setTimeout(this->send_timeout);
+
+        ESP_LOGD(TAG, "Connecting to %s:%u", host.c_str(), port);
+
+        if (!client.connect(host.c_str(), port))
         {
-            ESP_LOGE(TAG, "Client is nullptr");
+            ESP_LOGE(TAG, "Connection failed to %s:%u", host.c_str(), port);
             return;
         }
-        std::shared_ptr<http_request::HttpContainer> response = this->request_->post(
-            this->service_url, body, headers);
 
-        if (response == nullptr)
+        // Send HTTP request
+        client.printf("POST %s HTTP/1.1\r\n", url_path);
+        client.printf("Host: %s:%u\r\n", host.c_str(), port);
+        client.print(F("Content-Type: text/plain\r\n"));
+        if (!token.empty())
         {
-            ESP_LOGE(TAG, "Response is nullptr, request failed.");
-            return;
+            client.printf("Authorization: %s\r\n", token.c_str());
+        }
+        client.printf("Content-Length: %u\r\n", (unsigned)body.length());
+        client.print(F("Connection: close\r\n"));
+        client.print(F("User-Agent: ESPHome InfluxDB\r\n"));
+        client.print(F("\r\n"));
+        client.print(body.c_str());
+
+        // Read status line
+        unsigned long deadline = millis() + this->send_timeout;
+        while (client.available() == 0)
+        {
+            if (millis() > deadline)
+            {
+                ESP_LOGE(TAG, "HTTP response timeout");
+                client.stop();
+                return;
+            }
+            yield();
         }
 
-        if (response->status_code < 300)
+        // Parse status code from first line: "HTTP/1.1 204 No Content"
+        String status_line = client.readStringUntil('\n');
+        int status_code = 0;
+        int space_pos = status_line.indexOf(' ');
+        if (space_pos >= 0)
         {
-            ESP_LOGD(TAG, "Response satus: %d", response->status_code);
+            status_code = status_line.substring(space_pos + 1, space_pos + 4).toInt();
+        }
+
+        if (status_code < 300)
+        {
+            ESP_LOGD(TAG, "Response status: %d", status_code);
         }
         else
         {
-            uint8_t buf[64];
-            std::string response_body;
-
-            int bytes_read;
-            while ((bytes_read = response->read(buf, sizeof(buf))) > 0)
+            // Read remaining response for error logging
+            String response_body;
+            while (client.available())
             {
-                response_body.append(reinterpret_cast<const char*>(buf), bytes_read);
+                response_body += client.readStringUntil('\n');
             }
-
-            ESP_LOGE(TAG, "Failed! HTTP Status %d: %s", response->status_code, response_body.c_str());
+            ESP_LOGE(TAG, "Failed! HTTP Status %d: %s", status_code, response_body.c_str());
         }
-        response->end();
+
+        client.stop();
     }
 
     bool sensor_precondition(std::vector<EntityBase*> objs, EntityBase* sensor)
@@ -208,7 +191,7 @@ namespace esphome::influxdb2
         {
             binary_sensor->add_on_state_callback([this, binary_sensor](bool state)
             {
-                char buf[128];
+                char buf[64];
                 auto sr = binary_sensor->get_object_id_to(buf);
                 this->on_binary_sensor_update(binary_sensor, sr.str(), this->tags,
                                               this->field_key,
@@ -227,7 +210,7 @@ namespace esphome::influxdb2
         {
             s->add_on_state_callback([this, s](bool state)
             {
-                char buf[128];
+                char buf[64];
                 auto sr = s->get_object_id_to(buf);
                 this->on_switch_update(s, sr.str(), this->tags, this->field_key, state);
             });
@@ -244,7 +227,7 @@ namespace esphome::influxdb2
               tags_(std::move(tags)), field_key_(std::move(field_key)) {}
 
         void on_light_target_state_reached() override {
-            char buf[128];
+            char buf[64];
             auto sr = light_->get_object_id_to(buf);
             writer_->on_light_update(light_, sr.str(),
                                      tags_, field_key_);
@@ -279,7 +262,7 @@ namespace esphome::influxdb2
         {
             sensor->add_on_state_callback([this, sensor](float state)
             {
-                char buf[128];
+                char buf[64];
                 auto sr = sensor->get_object_id_to(buf);
                 this->on_sensor_update(sensor, sr.str(), this->tags, this->field_key, state);
             });
@@ -297,7 +280,7 @@ namespace esphome::influxdb2
         {
             text_sensor->add_on_state_callback([this, text_sensor](const std::string& state)
             {
-                char buf[128];
+                char buf[64];
                 auto sr = text_sensor->get_object_id_to(buf);
                 this->on_sensor_update(text_sensor, sr.str(), this->tags, this->field_key, state);
             });
@@ -362,7 +345,7 @@ namespace esphome::influxdb2
                                          const std::string& tags,
                                          const std::string& field_key) const
     {
-        std::stringstream value;
+        float light_val = 0.0f;
         bool state;
         obj->current_values_as_binary(&state);
         if (state)
@@ -372,22 +355,20 @@ namespace esphome::influxdb2
 #ifdef USE_ESP_IDF
             if (!std::isnan(brightness))
 #else
-            if (!isnan(state))
+            if (!isnan(brightness))
 #endif
             {
-                value << std::fixed << std::setprecision(this->precision) << brightness;
+                light_val = brightness;
             }
             else
             {
-                value << std::fixed << std::setprecision(this->precision) << 1;
+                light_val = 1.0f;
             }
         }
-        else
-        {
-            value << std::fixed << std::setprecision(this->precision) << 0;
-        }
+        char val_buf[VALUE_ACCURACY_MAX_LEN];
+        size_t len = value_accuracy_to_buf(val_buf, light_val, this->precision);
         ESP_LOGD(TAG, "Updating light: %s", field_key.c_str());
-        write(measurement, update_tags(obj, tags), field_key, value.str(), false);
+        write(measurement, update_tags(obj, tags), field_key, std::string(val_buf, len), false);
     }
 #endif
 
@@ -401,10 +382,10 @@ namespace esphome::influxdb2
         if (!isnan(state))
 #endif
         {
-            std::stringstream value;
-            value << std::fixed << std::setprecision(this->precision) << state;
+            char val_buf[VALUE_ACCURACY_MAX_LEN];
+            size_t len = value_accuracy_to_buf(val_buf, state, this->precision);
             ESP_LOGD(TAG, "Updating sensor: %s", field_key.c_str());
-            write(measurement, update_tags(obj, tags), field_key, value.str(), false);
+            write(measurement, update_tags(obj, tags), field_key, std::string(val_buf, len), false);
         }
     }
 #endif

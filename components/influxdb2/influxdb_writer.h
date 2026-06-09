@@ -5,12 +5,7 @@
 #include "esphome/core/log.h"
 #include <utility>
 #include <vector>
-
-#ifdef USE_ESP_IDF
-#include "esphome/components/http_request/http_request_idf.h"
-#else
-#include "esphome/components/http_request/http_request_arduino.h"
-#endif
+#include <WiFiClient.h>
 
 
 namespace esphome::influxdb2
@@ -20,16 +15,7 @@ namespace esphome::influxdb2
     public:
         virtual ~InfluxDBWriter() = default;
 
-        InfluxDBWriter(): port(0), send_timeout(0), publish_all(false), https(false), precision(0),
-                          request_(
-#ifdef USE_ESP_IDF
-                              new http_request::HttpRequestIDF()
-#else
-                              new http_request::HttpRequestArduino()
-#endif
-                          )
-        {
-        }
+        InfluxDBWriter(): port(0), send_timeout(0), publish_all(false), precision(0) {}
 
 
         void setup() override;
@@ -75,7 +61,6 @@ namespace esphome::influxdb2
         {
             setup_callbacks.push_back(fun);
         };
-        void set_https(bool https) { this->https = https; };
         void set_precision(int precision) { this->precision = precision; };
 
     // Overloaded helpers for type-aware codegen
@@ -126,17 +111,15 @@ namespace esphome::influxdb2
         std::string org_id;
         std::string token;
         std::string bucket;
-        std::string service_url;
         std::string field_key;
 
         int send_timeout;
         std::string tags;
         bool publish_all;
-        bool https;
         int precision;
 
         std::vector<std::function<EntityBase *()>> setup_callbacks;
 
-        http_request::HttpRequestComponent* request_;
+        WiFiClient client_;
     };
 } // namespace influxdb
