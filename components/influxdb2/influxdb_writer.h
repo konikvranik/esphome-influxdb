@@ -78,6 +78,24 @@ namespace esphome::influxdb2
         void set_https(bool https) { this->https = https; };
         void set_precision(int precision) { this->precision = precision; };
 
+    // Overloaded helpers for type-aware codegen
+#ifdef USE_SENSOR
+    void influxdb_register_entity(sensor::Sensor* entity, const std::string& measurement,
+                                  const std::string& tags, const std::string& field_key, float state);
+#endif
+#ifdef USE_BINARY_SENSOR
+    void influxdb_register_entity(binary_sensor::BinarySensor* entity, const std::string& measurement,
+                                  const std::string& tags, const std::string& field_key, bool state);
+#endif
+#ifdef USE_SWITCH
+    void influxdb_register_entity(switch_::Switch* entity, const std::string& measurement,
+                                  const std::string& tags, const std::string& field_key, bool state);
+#endif
+#ifdef USE_TEXT_SENSOR
+    void influxdb_register_entity(text_sensor::TextSensor* entity, const std::string& measurement,
+                                  const std::string& tags, const std::string& field_key, const std::string& state);
+#endif
+
     protected:
         void setup_client();
         static std::string update_tags(const EntityBase* obj, const std::string& tags);

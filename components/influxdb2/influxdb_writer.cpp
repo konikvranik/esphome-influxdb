@@ -102,7 +102,7 @@ namespace esphome::influxdb2
         return updated_tags;
     }
 
-    std::string headers_to_string(const std::list<http_request::Header>& headers)
+    std::string headers_to_string(const std::vector<http_request::Header>& headers)
     {
         std::ostringstream oss;
         oss << "[";
@@ -131,7 +131,7 @@ namespace esphome::influxdb2
     {
         std::replace(measurement.begin(), measurement.end(), '-', '_');
 
-        std::list<http_request::Header> headers;
+        std::vector<http_request::Header> headers;
         http_request::Header header;
         header.name = "Content-Type";
         header.value = "text/plain";
@@ -208,7 +208,9 @@ namespace esphome::influxdb2
         {
             binary_sensor->add_on_state_callback([this, binary_sensor](bool state)
             {
-                this->on_binary_sensor_update(binary_sensor, binary_sensor->get_object_id(), this->tags,
+                char buf[128];
+                auto sr = binary_sensor->get_object_id_to(buf);
+                this->on_binary_sensor_update(binary_sensor, sr.str(), this->tags,
                                               this->field_key,
                                               state);
             });
@@ -225,23 +227,45 @@ namespace esphome::influxdb2
         {
             s->add_on_state_callback([this, s](bool state)
             {
-                this->on_switch_update(s, s->get_object_id(), this->tags, this->field_key, state);
+                char buf[128];
+                auto sr = s->get_object_id_to(buf);
+                this->on_switch_update(s, sr.str(), this->tags, this->field_key, state);
             });
         }
     }
 #endif
 
 #ifdef USE_LIGHT
+    namespace {
+    struct LightUpdateListener : public light::LightTargetStateReachedListener {
+        LightUpdateListener(const InfluxDBWriter* writer, light::LightState* light,
+                            std::string tags, std::string field_key)
+            : writer_(writer), light_(light),
+              tags_(std::move(tags)), field_key_(std::move(field_key)) {}
+
+        void on_light_target_state_reached() override {
+            char buf[128];
+            auto sr = light_->get_object_id_to(buf);
+            writer_->on_light_update(light_, sr.str(),
+                                     tags_, field_key_);
+        }
+
+    private:
+        const InfluxDBWriter* writer_;
+        light::LightState* light_;
+        std::string tags_;
+        std::string field_key_;
+    };
+    } // anonymous namespace
+
     void InfluxDBWriter::register_light_callback(std::vector<EntityBase*> objs, light::LightState* light) const
     {
         if (
             sensor_precondition(std::move(objs), light)
         )
         {
-            light->add_new_target_state_reached_callback([this, light]()
-            {
-                this->on_light_update(light, light->get_object_id(), this->tags, this->field_key);
-            });
+            auto* listener = new LightUpdateListener(this, light, this->tags, this->field_key);
+            light->add_target_state_reached_listener(listener);
         }
     }
 #endif
@@ -255,7 +279,9 @@ namespace esphome::influxdb2
         {
             sensor->add_on_state_callback([this, sensor](float state)
             {
-                this->on_sensor_update(sensor, sensor->get_object_id(), this->tags, this->field_key, state);
+                char buf[128];
+                auto sr = sensor->get_object_id_to(buf);
+                this->on_sensor_update(sensor, sr.str(), this->tags, this->field_key, state);
             });
         }
     }
@@ -271,9 +297,37 @@ namespace esphome::influxdb2
         {
             text_sensor->add_on_state_callback([this, text_sensor](const std::string& state)
             {
-                this->on_sensor_update(text_sensor, text_sensor->get_object_id(), this->tags, this->field_key, state);
+                char buf[128];
+                auto sr = text_sensor->get_object_id_to(buf);
+                this->on_sensor_update(text_sensor, sr.str(), this->tags, this->field_key, state);
             });
         }
+    }
+#endif
+
+    // Overloaded helpers for type-aware codegen
+#ifdef USE_SENSOR
+    void InfluxDBWriter::influxdb_register_entity(sensor::Sensor* entity, const std::string& measurement,
+                                                   const std::string& tags, const std::string& field_key, float state) {
+        this->on_sensor_update(entity, measurement, tags, field_key, state);
+    }
+#endif
+#ifdef USE_BINARY_SENSOR
+    void InfluxDBWriter::influxdb_register_entity(binary_sensor::BinarySensor* entity, const std::string& measurement,
+                                                   const std::string& tags, const std::string& field_key, bool state) {
+        this->on_binary_sensor_update(entity, measurement, tags, field_key, state);
+    }
+#endif
+#ifdef USE_SWITCH
+    void InfluxDBWriter::influxdb_register_entity(switch_::Switch* entity, const std::string& measurement,
+                                                   const std::string& tags, const std::string& field_key, bool state) {
+        this->on_switch_update(entity, measurement, tags, field_key, state);
+    }
+#endif
+#ifdef USE_TEXT_SENSOR
+    void InfluxDBWriter::influxdb_register_entity(text_sensor::TextSensor* entity, const std::string& measurement,
+                                                   const std::string& tags, const std::string& field_key, const std::string& state) {
+        this->on_sensor_update(entity, measurement, tags, field_key, state);
     }
 #endif
 
