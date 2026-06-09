@@ -210,7 +210,7 @@ namespace esphome::influxdb2
             {
                 char buf[128];
                 auto sr = binary_sensor->get_object_id_to(buf);
-                this->on_binary_sensor_update(binary_sensor, std::string(sr.data(), sr.size()), this->tags,
+                this->on_binary_sensor_update(binary_sensor, sr.str(), this->tags,
                                               this->field_key,
                                               state);
             });
@@ -229,7 +229,7 @@ namespace esphome::influxdb2
             {
                 char buf[128];
                 auto sr = s->get_object_id_to(buf);
-                this->on_switch_update(s, std::string(sr.data(), sr.size()), this->tags, this->field_key, state);
+                this->on_switch_update(s, sr.str(), this->tags, this->field_key, state);
             });
         }
     }
@@ -246,7 +246,7 @@ namespace esphome::influxdb2
         void on_light_target_state_reached() override {
             char buf[128];
             auto sr = light_->get_object_id_to(buf);
-            writer_->on_light_update(light_, std::string(sr.data(), sr.size()),
+            writer_->on_light_update(light_, sr.str(),
                                      tags_, field_key_);
         }
 
@@ -281,7 +281,7 @@ namespace esphome::influxdb2
             {
                 char buf[128];
                 auto sr = sensor->get_object_id_to(buf);
-                this->on_sensor_update(sensor, std::string(sr.data(), sr.size()), this->tags, this->field_key, state);
+                this->on_sensor_update(sensor, sr.str(), this->tags, this->field_key, state);
             });
         }
     }
@@ -299,7 +299,7 @@ namespace esphome::influxdb2
             {
                 char buf[128];
                 auto sr = text_sensor->get_object_id_to(buf);
-                this->on_sensor_update(text_sensor, std::string(sr.data(), sr.size()), this->tags, this->field_key, state);
+                this->on_sensor_update(text_sensor, sr.str(), this->tags, this->field_key, state);
             });
         }
     }
