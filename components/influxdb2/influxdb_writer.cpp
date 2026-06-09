@@ -305,6 +305,32 @@ namespace esphome::influxdb2
     }
 #endif
 
+    // Overloaded helpers for type-aware codegen
+#ifdef USE_SENSOR
+    void InfluxDBWriter::influxdb_register_entity(sensor::Sensor* entity, const std::string& measurement,
+                                                   const std::string& tags, const std::string& field_key, float state) {
+        this->on_sensor_update(entity, measurement, tags, field_key, state);
+    }
+#endif
+#ifdef USE_BINARY_SENSOR
+    void InfluxDBWriter::influxdb_register_entity(binary_sensor::BinarySensor* entity, const std::string& measurement,
+                                                   const std::string& tags, const std::string& field_key, bool state) {
+        this->on_binary_sensor_update(entity, measurement, tags, field_key, state);
+    }
+#endif
+#ifdef USE_SWITCH
+    void InfluxDBWriter::influxdb_register_entity(switch_::Switch* entity, const std::string& measurement,
+                                                   const std::string& tags, const std::string& field_key, bool state) {
+        this->on_switch_update(entity, measurement, tags, field_key, state);
+    }
+#endif
+#ifdef USE_TEXT_SENSOR
+    void InfluxDBWriter::influxdb_register_entity(text_sensor::TextSensor* entity, const std::string& measurement,
+                                                   const std::string& tags, const std::string& field_key, const std::string& state) {
+        this->on_sensor_update(entity, measurement, tags, field_key, state);
+    }
+#endif
+
     void InfluxDBWriter::dump_config()
     {
         ESP_LOGCONFIG(TAG, "InfluxDB Writer:");
