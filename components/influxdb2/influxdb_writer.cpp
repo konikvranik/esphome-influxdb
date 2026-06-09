@@ -238,7 +238,7 @@ namespace esphome::influxdb2
 #ifdef USE_LIGHT
     namespace {
     struct LightUpdateListener : public light::LightTargetStateReachedListener {
-        LightUpdateListener(InfluxDBWriter* writer, light::LightState* light,
+        LightUpdateListener(const InfluxDBWriter* writer, light::LightState* light,
                             std::string tags, std::string field_key)
             : writer_(writer), light_(light),
               tags_(std::move(tags)), field_key_(std::move(field_key)) {}
@@ -251,7 +251,7 @@ namespace esphome::influxdb2
         }
 
     private:
-        InfluxDBWriter* writer_;
+        const InfluxDBWriter* writer_;
         light::LightState* light_;
         std::string tags_;
         std::string field_key_;
