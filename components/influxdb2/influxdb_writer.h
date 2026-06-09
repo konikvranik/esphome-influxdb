@@ -7,6 +7,33 @@
 #include <vector>
 #include <WiFiClient.h>
 
+namespace esphome
+{
+    class EntityBase;
+
+    namespace binary_sensor
+    {
+        class BinarySensor;
+    } // namespace binary_sensor
+    namespace sensor
+    {
+        class Sensor;
+    } // namespace sensor
+    namespace switch_
+    {
+        class Switch;
+    } // namespace switch_
+    namespace text_sensor
+    {
+        class TextSensor;
+    } // namespace text_sensor
+#ifdef USE_LIGHT
+    namespace light
+    {
+        class LightState;
+    } // namespace light
+#endif
+} // namespace esphome
 
 namespace esphome::influxdb2
 {
