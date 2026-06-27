@@ -11,9 +11,7 @@ AUTO_LOAD = ['network']
 
 influxdb_ns = cg.esphome_ns.namespace('influxdb2')
 
-InfluxDBWriter = (influxdb_ns.class_('InfluxDBWriter', cg.Component, cg.Controller)
-                  if CORE.using_esp_idf
-                  else influxdb_ns.class_('InfluxDBWriter', cg.Component, cg.Controller))
+InfluxDBWriter = influxdb_ns.class_('InfluxDBWriter', cg.Component, cg.Controller)
 
 CONF_HOST = 'host'
 CONF_ORG_ID = 'orgid'
